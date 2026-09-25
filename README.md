@@ -104,7 +104,7 @@ Se o roteador reiniciar, o celular pode ganhar outro IP; a tela e o rodapé do p
 - A engrenagem no canto inferior direito abre os ajustes depois de pedir o PIN.
 - Depois de reiniciar o celular ou o app, a tela pede o PIN de novo. Dá para destravar pelo painel no PC.
 
-## Compartilhar com amigos
+## Quer testar localmente?
 
 O APK de cada versão fica na aba [Releases](../../releases); compilando localmente, ele sai em `dist\`. Quem for instalar precisa:
 
@@ -121,7 +121,7 @@ adb shell appops set dev.clawdboard SYSTEM_ALERT_WINDOW allow
 Atualizar por cima com um APK novo mantém token, PIN, ajustes e histórico, desde que seja assinado pela mesma chave de debug desta máquina.
 Depois da atualização o app pede o PIN uma vez.
 
-## Quer testar localmente?
+## Compilar e instalar
 
 Precisa do JDK 17 e do Android SDK com a API 35 (em `ANDROID_HOME` ou no `sdk.dir` do `local.properties`). Com eles instalados:
 
