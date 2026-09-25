@@ -233,6 +233,11 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                 "Mascote",
                 if (prefs.mascot() == Species.CLAWD) "Clawd é o mascote do Claude Code, da Anthropic" else "Racco, o guaxinim do Banditboard",
             )
+            if (prefs.mascot() == Species.RACCOON) Text(
+                "Por que um guaxinim? Porque ele vive espiando e se esgueirando, sempre de olho nos seus limites. " +
+                    "E é uma pequena homenagem à minha linda futura esposa, que se identifica com guaxinins: apesar dela dizer que é um, ela não é.",
+                color = C.text, fontSize = 13.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
+            )
             Credit("Dados", "Claude Code no PC, status.claude.com e o feed Olshansk/rss-feeds")
             Credit("Feedback", Nudge.EMAIL, C.clawd) { sendFeedback(context) }
             Hint("Projeto pessoal de fã, sem vínculo com a Anthropic.")
