@@ -359,7 +359,7 @@ class Music(private val app: Context) {
             app = spotify.first,
             appIcon = spotify.second,
             title = "Pixel Groove",
-            artist = "Clawd e os Modelos",
+            artist = "Guaxinim e os Modelos",
             art = demoCover(),
             playing = playing,
             position = 83_000L,

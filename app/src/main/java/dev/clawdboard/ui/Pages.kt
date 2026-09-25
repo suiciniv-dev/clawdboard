@@ -78,7 +78,7 @@ fun DashboardPage(st: Repository.State, landscape: Boolean, compact: Boolean = f
             SmallClock()
             UsageBlock("Sessão", "janela de 5 horas", usage?.fiveHour, big = big, compact = compact)
             UsageBlock("Semana", "janela de 7 dias", usage?.sevenDay, scoped = usage?.scoped.orEmpty(), big = big, compact = compact)
-            MascotRow(st.status, usage = usage, clawdWidth = 64.dp)
+            MascotRow(st.status, usage = usage, mascotWidth = 64.dp)
             StatusLine(st.status)
             Footer(st, compact)
         }
@@ -311,7 +311,7 @@ fun ClockPage(st: Repository.State, landscape: Boolean) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { minis() }
             }
             Spacer(Modifier.height(14.dp))
-            MascotRow(st.status, Modifier.width(260.dp), usage = st.usage, clawdWidth = 34.dp, labels = false)
+            MascotRow(st.status, Modifier.width(260.dp), usage = st.usage, mascotWidth = 34.dp, labels = false)
         }
     }
 }
@@ -353,7 +353,7 @@ fun MascotsPage(st: Repository.State, landscape: Boolean, compact: Boolean = fal
                 verticalAlignment = Alignment.Bottom,
             ) {
                 MODELS.forEachIndexed { i, m ->
-                    BigMascot(m, i, st, modelUsage(usage, m), Modifier.weight(1f), maxClawd = 132.dp, compact = compact)
+                    BigMascot(m, i, st, modelUsage(usage, m), Modifier.weight(1f), maxMascot = 132.dp, compact = compact)
                 }
             }
         }
@@ -370,7 +370,7 @@ fun MascotsPage(st: Repository.State, landscape: Boolean, compact: Boolean = fal
                 MODELS.chunked(2).forEachIndexed { r, pair ->
                     Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
                         pair.forEachIndexed { c, m ->
-                            BigMascot(m, r * 2 + c, st, modelUsage(usage, m), Modifier.weight(1f), maxClawd = 128.dp, compact = compact)
+                            BigMascot(m, r * 2 + c, st, modelUsage(usage, m), Modifier.weight(1f), maxMascot = 128.dp, compact = compact)
                         }
                     }
                 }
@@ -436,12 +436,12 @@ private fun WideUsageRow(title: String, window: String, w: UsageWindow?, compact
 }
 
 @Composable
-private fun BigMascot(model: String, index: Int, st: Repository.State, mu: ModelUsage, modifier: Modifier, maxClawd: Dp, compact: Boolean) {
+private fun BigMascot(model: String, index: Int, st: Repository.State, mu: ModelUsage, modifier: Modifier, maxMascot: Dp, compact: Boolean) {
     val down = st.status?.down?.contains(model) == true
     val feel = feelOf(st.usage, model)
     val out = feel.mood == Mood.EXHAUSTED
     BoxWithConstraints(modifier.fillMaxHeight()) {
-        val barW = minOf(maxClawd * 0.8f, maxWidth * 0.7f)
+        val barW = minOf(maxMascot * 0.8f, maxWidth * 0.7f)
         val arrangement = if (compact) Arrangement.Center else Arrangement.Bottom
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = arrangement) {
             Text(
@@ -461,8 +461,8 @@ private fun BigMascot(model: String, index: Int, st: Repository.State, mu: Model
             }
             Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
             BoxWithConstraints(Modifier.weight(1f, fill = false)) {
-                Clawd(
-                    Modifier.width(minOf(maxClawd, maxWidth * 0.85f, maxHeight * CLAWD_ASPECT)),
+                Mascot(
+                    Modifier.width(minOf(maxMascot, maxWidth * 0.85f, maxHeight * MASCOT_ASPECT)),
                     model = model, alive = !down, seed = index + 11, feel = feel,
                 )
             }

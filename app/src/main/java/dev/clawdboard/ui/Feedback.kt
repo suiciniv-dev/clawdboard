@@ -82,7 +82,7 @@ fun FeedbackCard(repo: Repository, modifier: Modifier = Modifier) {
                 .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Clawd(Modifier.width(60.dp), seed = 5, reserveTop = false)
+            Mascot(Modifier.width(60.dp), seed = 5, reserveTop = false)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text("Está gostando do Clawdboard?", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)

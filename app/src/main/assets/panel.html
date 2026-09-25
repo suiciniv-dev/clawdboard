@@ -266,7 +266,24 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 const $ = id => document.getElementById(id);
 let state = null, clockOffset = 0, editing = false;
 
-const EYE = "#0c0a08";
+const EYE = "#0c0a08", SHINE = "#f3efea", FUR = "#eee7db", MASK = "#4a413b", NOSE = "#0c0a08", XEYE = "#d8cfc2";
+const SPRITE = [
+  "................",
+  "................",
+  "................",
+  "..MM........MM..",
+  ".MLLMBBBBBBMLLM.",
+  ".BBBBBBBBBBBBBB.",
+  ".BLLLLBBBBLLLLB.",
+  ".MMMMMBBBBMMMMM.",
+  "BMMMMMMBBMMMMMMB",
+  "BBMMMMLLLLMMMMBB",
+  ".BBBLLLNNLLLBBB.",
+  ".bBBBLLLLLLBBBb.",
+  "..bBBBBBBBBBBb..",
+  "...MM......MM...",
+];
+const SPRITE_TOP = 3, EYE_ROW = 7, EYE_COLS = [3, 11];
 function mix(a, b, t){
   const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   const x = p(a), y = p(b);
@@ -274,26 +291,36 @@ function mix(a, b, t){
 }
 function sprite(model, m, i){
   const lk = state && state.look, def = model && lk ? lk.models[model] : null;
-  const T = def ? lk.top : 0;
   const down = !!(m && m.down), out = !!(m && !down && m.mood === "EXHAUSTED");
   const dancing = !!(m && !down && state && state.music && state.music.playing);
   const sleepy = !!(m && !down && !out && !dancing && m.mood === "SLEEPY");
   const sweaty = !!(m && !down && !out && m.mood === "SWEATY");
   const heat = m && !down && !out ? m.heat : 0;
-  const base = def ? def.body : "#d77757";
+  const base = def ? def.body : "#a39b90";
   const body = down ? "#5a5247" : out ? "#4e3530" : heat > 0 ? mix(base, "#ff3b2f", heat) : base;
+  const fur = down ? "#7a7064" : out ? "#6e5a52" : heat > 0 ? mix(FUR, "#ffb0a3", heat) : FUR;
+  const mask = down ? "#3a342e" : out ? "#2a1f1c" : MASK;
+  const paint = {B: body, b: mix(body, "#000000", .24), L: fur, M: mask, N: NOSE};
   const r = (x, y, w, h, extra = "") => `<rect x="${x}" y="${y}" width="${w + .04}" height="${h + .04}"${extra}/>`;
-  const torso = r(2, T, 12, 2) + r(2, T + 2, 12, 2) + r(2, T + 4, 12, 2) + r(2, T + 6, 12, 2);
-  const left = r(0, T + 4, 2, 2), right = r(14, T + 4, 2, 2);
-  const arms = i % 2 ? left + `<g class="arm">${right}</g>` : `<g class="arm">${left}</g>` + right;
+  let torso = "", earL = "", earR = "", footL = "", footR = "";
+  SPRITE.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    const cell = r(x, y, 1, 1, ` fill="${paint[ch]}"`);
+    const ear = y >= 3 && y <= 4;
+    if (y === SPRITE.length - 1) { if (x < 8) footL += cell; else footR += cell; }
+    else if (ear && x >= 1 && x <= 4) { earL += cell; if (y === 4) torso += cell; }
+    else if (ear && x >= 11 && x <= 14) { earR += cell; if (y === 4) torso += cell; }
+    else torso += cell;
+  }));
+  const ears = i % 2 ? earL + `<g class="arm">${earR}</g>` : `<g class="arm">${earL}</g>` + earR;
   let eyes;
-  if (down || out) eyes = [4, 11].map(c => `<path d="M${c - .45} ${T + 2.25}L${c + 1.45} ${T + 3.75}M${c - .45} ${T + 3.75}L${c + 1.45} ${T + 2.25}" stroke="${EYE}" stroke-width=".5" fill="none"/>`).join("");
-  else if (sleepy) eyes = [4, 11].map(c => r(c, T + 3.2, 1, .4, ` fill="${EYE}"`)).join("");
-  else eyes = `<g class="eyes">${[4, 11].map(c => r(c, T + 2, 1, 2, ` fill="${EYE}"`) + r(c, T + 2, 1, 2, ` class="lid"`)).join("")}</g>`;
+  if (down || out) eyes = EYE_COLS.map(c => `<path d="M${c + .05} ${EYE_ROW + .05}L${c + 1.95} ${EYE_ROW + 1.95}M${c + .05} ${EYE_ROW + 1.95}L${c + 1.95} ${EYE_ROW + .05}" stroke="${XEYE}" stroke-width=".45" fill="none" shape-rendering="geometricPrecision"/>`).join("");
+  else if (sleepy) eyes = EYE_COLS.map(c => r(c, EYE_ROW + 1.6, 2, .4, ` fill="${EYE}"`)).join("");
+  else eyes = `<g class="eyes">${EYE_COLS.map(c => r(c, EYE_ROW, 2, 2, ` fill="${EYE}"`) + r(c, EYE_ROW, 1, 1, ` fill="${SHINE}"`) + `<g class="lid">${r(c, EYE_ROW, 2, 2, ` fill="${mask}"`)}${r(c, EYE_ROW + 1.6, 2, .4, ` fill="${EYE}"`)}</g>`).join("")}</g>`;
   const acc = def ? def.acc.map(([x, y, w, h, c]) => r(x, y, w, h, ` fill="${c}"`)).join("") : "";
-  const legs = `<g class="la">${r(3, T + 8, 1, 2)}${r(10, T + 8, 1, 2)}</g><g class="lb">${r(5, T + 8, 1, 2)}${r(12, T + 8, 1, 2)}</g>`;
+  const legs = `<g class="la">${footL}</g><g class="lb">${footR}</g>`;
   let extra = "";
-  if (sweaty) extra += r(14, 3, 1, 2, ` class="drop" fill="#8fd3f4"`);
+  if (sweaty) extra += r(15, 3, 1, 2, ` class="drop" fill="#8fd3f4"`);
   if (sleepy) extra += `<g class="z" fill="#a89a86">${r(13, 0, 3, 1)}${r(15, 1, 1, 1)}${r(14, 2, 1, 1)}${r(13, 3, 3, 1)}</g>`;
   if (out) extra += `<g class="smoke" fill="#8a8078">${r(7, 3, 1, 1)}${r(8, 2, 1, 1, ` opacity=".6"`)}</g>`;
   if (dancing && !out) {
@@ -302,7 +329,7 @@ function sprite(model, m, i){
   }
   const cls = ["cl", sleepy && "sleepy", heat > 0 && "hot", heat >= .5 && !dancing && "shake", def && def.kind === "GLASSES" && "nolook", (down || out) && "dead", dancing && !out && "dance", dancing && out && "tap"].filter(Boolean).join(" ");
   const style = `--d:${-(i * 2.3 + .7).toFixed(1)}s;--lx:${i % 2 ? -1 : 1}px`;
-  return `<svg class="${cls}" style="${style}" viewBox="0 0 16 ${T + 10}" fill="${body}" aria-hidden="true"><g class="all"><g class="bod">${torso}${arms}${eyes}${acc}</g>${legs}${extra}</g></svg>`;
+  return `<svg class="${cls}" style="${style}" viewBox="0 ${def ? 0 : SPRITE_TOP} 16 ${def ? SPRITE.length : SPRITE.length - SPRITE_TOP}" fill="${body}" shape-rendering="crispEdges" aria-hidden="true"><g class="all"><g class="bod">${torso}${ears}${eyes}${acc}</g>${legs}${extra}</g></svg>`;
 }
 $("logo").innerHTML = sprite(null, null, 1);
 

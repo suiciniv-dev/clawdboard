@@ -12,7 +12,7 @@ enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto A
 enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
 enum class Orientation(val label: String) { LANDSCAPE("Paisagem"), PORTRAIT("Retrato"), AUTO("Automática") }
 enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"), CROWNS("Coroas"), XMAS("Natal") }
-enum class Tint(val label: String) { CORAL("Coral"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
+enum class Tint(val label: String) { NATURAL("Natural"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
 
 data class Prefs(
     val mode: ScreenMode = ScreenMode.CAROUSEL,
@@ -25,7 +25,7 @@ data class Prefs(
     val backdrop: Backdrop = Backdrop.DEFAULT,
     val zoom: Int = 100,
     val skin: Skin = Skin.MODELS,
-    val tint: Tint = Tint.CORAL,
+    val tint: Tint = Tint.NATURAL,
     val animations: Boolean = true,
     val music: Boolean = false,
 ) {

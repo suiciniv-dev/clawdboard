@@ -112,7 +112,7 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
                     Spacer(Modifier.height(if (compact) 6.dp else 10.dp))
                     Controls(t, music, compact)
                 }
-                if (!compact) MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, clawdWidth = 40.dp, labels = false)
+                if (!compact) MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, mascotWidth = 40.dp, labels = false)
             }
         }
         else -> Column(
@@ -126,7 +126,7 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
             Progress(t, music::seek)
             Controls(t, music, compact)
             VolumeBar(music, Modifier.widthIn(max = 360.dp).padding(top = 4.dp, bottom = 10.dp))
-            MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, clawdWidth = 48.dp, labels = false)
+            MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, mascotWidth = 48.dp, labels = false)
         }
     }
 }
@@ -154,7 +154,7 @@ private fun MusicEmpty(st: Repository.State, title: String, text: String, apps: 
             }
         }
         Spacer(Modifier.height(22.dp))
-        MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, clawdWidth = 44.dp, labels = false)
+        MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, mascotWidth = 44.dp, labels = false)
     }
 }
 

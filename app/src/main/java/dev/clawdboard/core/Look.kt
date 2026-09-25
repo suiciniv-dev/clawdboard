@@ -5,6 +5,34 @@ import org.json.JSONObject
 
 const val LOOK_TOP = 4
 const val LOOK_ROWS = LOOK_TOP + 10
+const val SPRITE_TOP = 3
+const val FEET_ROW = LOOK_ROWS - 1
+const val EYE_ROW = 7
+
+val SPRITE = arrayOf(
+    "................",
+    "................",
+    "................",
+    "..MM........MM..",
+    ".MLLMBBBBBBMLLM.",
+    ".BBBBBBBBBBBBBB.",
+    ".BLLLLBBBBLLLLB.",
+    ".MMMMMBBBBMMMMM.",
+    "BMMMMMMBBMMMMMMB",
+    "BBMMMMLLLLMMMMBB",
+    ".BBBLLLNNLLLBBB.",
+    ".bBBBLLLLLLBBBb.",
+    "..bBBBBBBBBBBb..",
+    "...MM......MM...",
+)
+val EYE_COLS = intArrayOf(3, 11)
+val EAR_ROWS = 3..4
+val LEFT_EAR = 1..4
+val RIGHT_EAR = 11..14
+
+const val FUR = 0xFFEEE7DB
+const val MASK = 0xFF4A413B
+const val NOSE = 0xFF0C0A08
 
 enum class Accessory { TOP_HAT, GLASSES, HEADPHONES, SPROUT, CROWN, SANTA }
 
@@ -28,7 +56,7 @@ fun feelOf(usage: UsageSnapshot?, model: String): Feel {
 
 data class Px(val x: Int, val y: Int, val w: Int, val h: Int, val argb: Long)
 
-private const val CORAL = 0xFFD77757
+private const val GRAY = 0xFFA39B90
 private const val LAVENDER = 0xFFB9A6F2
 private const val MINT = 0xFF7CCBA2
 private const val PINK = 0xFFF59AC0
@@ -36,7 +64,6 @@ private const val PINK = 0xFFF59AC0
 private const val HAT = 0xFF3B3446
 private const val HAT_SHINE = 0xFF5A4F6B
 private const val GOLD = 0xFFF5D66A
-private const val FRAME = 0xFF1B1512
 private const val PHONES = 0xFF3F3A48
 private const val PHONES_SHINE = 0xFF7D7590
 private const val LEAF = 0xFF8FB573
@@ -59,7 +86,7 @@ fun accessoryFor(skin: Skin, model: String?): Accessory? = when (skin) {
 }
 
 fun bodyArgb(tint: Tint, model: String?): Long = when (tint) {
-    Tint.CORAL -> CORAL
+    Tint.NATURAL -> GRAY
     Tint.LAVENDER -> LAVENDER
     Tint.MINT -> MINT
     Tint.BUBBLEGUM -> PINK
@@ -67,7 +94,7 @@ fun bodyArgb(tint: Tint, model: String?): Long = when (tint) {
         "Haiku" -> MINT
         "Sonnet" -> LAVENDER
         "Fable" -> PINK
-        else -> CORAL
+        else -> GRAY
     }
 }
 
@@ -75,12 +102,15 @@ fun accessoryPixels(a: Accessory): List<Px> = when (a) {
     Accessory.TOP_HAT -> listOf(
         Px(5, 0, 6, 2, HAT), Px(5, 0, 1, 2, HAT_SHINE), Px(5, 2, 6, 1, GOLD), Px(4, 3, 8, 1, HAT),
     )
-    Accessory.GLASSES -> listOf(4, 11).flatMap { e ->
-        listOf(Px(e - 1, 5, 3, 1, FRAME), Px(e - 1, 8, 3, 1, FRAME), Px(e - 1, 6, 1, 2, FRAME), Px(e + 1, 6, 1, 2, FRAME))
-    } + Px(6, 6, 4, 1, FRAME)
+    Accessory.GLASSES -> EYE_COLS.flatMap { e ->
+        listOf(
+            Px(e - 1, EYE_ROW - 1, 4, 1, GOLD), Px(e - 1, EYE_ROW + 2, 4, 1, GOLD),
+            Px(e - 1, EYE_ROW, 1, 2, GOLD), Px(e + 2, EYE_ROW, 1, 2, GOLD),
+        )
+    } + Px(6, EYE_ROW, 4, 1, GOLD)
     Accessory.HEADPHONES -> listOf(
-        Px(3, 2, 10, 1, PHONES), Px(2, 3, 1, 2, PHONES), Px(13, 3, 1, 2, PHONES),
-        Px(1, 5, 2, 3, PHONES), Px(13, 5, 2, 3, PHONES), Px(1, 6, 1, 1, PHONES_SHINE), Px(14, 6, 1, 1, PHONES_SHINE),
+        Px(2, 2, 12, 1, PHONES), Px(1, 3, 1, 3, PHONES), Px(14, 3, 1, 3, PHONES),
+        Px(0, 6, 2, 3, PHONES), Px(14, 6, 2, 3, PHONES), Px(0, 7, 1, 1, PHONES_SHINE), Px(15, 7, 1, 1, PHONES_SHINE),
     )
     Accessory.SPROUT -> listOf(
         Px(7, 1, 1, 3, STEM), Px(5, 1, 2, 1, LEAF), Px(6, 2, 1, 1, LEAF), Px(8, 0, 2, 1, LEAF), Px(8, 1, 1, 1, LEAF),
@@ -89,7 +119,7 @@ fun accessoryPixels(a: Accessory): List<Px> = when (a) {
         Px(4, 2, 8, 2, GOLD), Px(4, 1, 1, 1, GOLD), Px(7, 0, 2, 2, GOLD), Px(11, 1, 1, 1, GOLD), Px(7, 2, 2, 1, RUBY),
     )
     Accessory.SANTA -> listOf(
-        Px(4, 2, 8, 1, RED), Px(6, 1, 5, 1, RED), Px(9, 0, 3, 1, RED), Px(12, 0, 2, 2, WHITE), Px(3, 3, 10, 1, WHITE),
+        Px(4, 2, 8, 1, RED), Px(6, 1, 5, 1, RED), Px(9, 0, 3, 1, RED), Px(12, 0, 2, 2, WHITE), Px(4, 3, 8, 1, WHITE),
     )
 }
 

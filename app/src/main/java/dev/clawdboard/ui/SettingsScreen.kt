@@ -133,7 +133,7 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
             Toggle("Painel web na rede local", st.panelUrl, prefs.panelEnabled) { v -> repo.updateSettings { it.copy(panelEnabled = v) } }
 
             Section("Mascotes")
-            MascotRow(st.status, Modifier.widthIn(max = 420.dp), usage = st.usage, clawdWidth = 72.dp)
+            MascotRow(st.status, Modifier.widthIn(max = 420.dp), usage = st.usage, mascotWidth = 72.dp)
             Label("Acessórios")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Skin.entries.forEach { s -> Chip(s.label, prefs.skin == s) { repo.updateSettings { it.copy(skin = s) } } }
@@ -214,7 +214,7 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
 
             Section("Créditos")
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Clawd(Modifier.width(72.dp), seed = 99, reserveTop = false)
+                Mascot(Modifier.width(72.dp), seed = 99, reserveTop = false)
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text("Clawdboard ${BuildConfig.VERSION_NAME}", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)

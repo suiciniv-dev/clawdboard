@@ -130,18 +130,18 @@ fun MascotRow(
     status: StatusSnapshot?,
     modifier: Modifier = Modifier,
     usage: UsageSnapshot? = null,
-    clawdWidth: Dp = 56.dp,
+    mascotWidth: Dp = 56.dp,
     labels: Boolean = true,
 ) {
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val w = minOf(clawdWidth, maxWidth / MODELS.size * 0.82f)
+        val w = minOf(mascotWidth, maxWidth / MODELS.size * 0.82f)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             MODELS.forEachIndexed { i, m ->
                 val down = status?.down?.contains(m) == true
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val feel = feelOf(usage, m)
                     val bad = down || feel.mood == Mood.EXHAUSTED
-                    Clawd(Modifier.width(w), model = m, alive = !down, seed = i + 1, feel = feel)
+                    Mascot(Modifier.width(w), model = m, alive = !down, seed = i + 1, feel = feel)
                     if (labels) {
                         Spacer(Modifier.height(6.dp))
                         Text(m, color = if (bad) C.bad else C.muted, fontSize = 13.sp, fontWeight = if (bad) FontWeight.SemiBold else FontWeight.Normal)

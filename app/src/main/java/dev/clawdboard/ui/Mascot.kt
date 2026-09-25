@@ -16,10 +16,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
 import dev.clawdboard.core.Accessory
+import dev.clawdboard.core.EAR_ROWS
+import dev.clawdboard.core.EYE_COLS
+import dev.clawdboard.core.EYE_ROW
+import dev.clawdboard.core.FEET_ROW
+import dev.clawdboard.core.FUR
 import dev.clawdboard.core.Feel
-import dev.clawdboard.core.Mood
+import dev.clawdboard.core.LEFT_EAR
 import dev.clawdboard.core.LOOK_ROWS
-import dev.clawdboard.core.LOOK_TOP
+import dev.clawdboard.core.MASK
+import dev.clawdboard.core.Mood
+import dev.clawdboard.core.NOSE
+import dev.clawdboard.core.RIGHT_EAR
+import dev.clawdboard.core.SPRITE
+import dev.clawdboard.core.SPRITE_TOP
 import dev.clawdboard.core.Skin
 import dev.clawdboard.core.Tint
 import dev.clawdboard.core.accessoryFor
@@ -28,18 +38,19 @@ import dev.clawdboard.core.bodyArgb
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
-private val BODY = arrayOf(
-    "..############..",
-    "..##E######E##..",
-    "################",
-    "..############..",
-    "...#.#....#.#...",
-)
-private val EYE_COLS = intArrayOf(4, 11)
-private val LEG_COLS = intArrayOf(3, 5, 10, 12)
+private val FUR_COLOR = Color(FUR)
+private val MASK_COLOR = Color(MASK)
+private val NOSE_COLOR = Color(NOSE)
+private val SHINE = Color(0xFFF3EFEA)
 private val SWEAT = Color(0xFF8FD3F4)
 private val HOT = Color(0xFFFF3B2F)
+private val HOT_FUR = Color(0xFFFFB0A3)
 private val CHARRED = Color(0xFF4E3530)
+private val CHARRED_FUR = Color(0xFF6E5A52)
+private val CHARRED_MASK = Color(0xFF2A1F1C)
+private val DEAD_FUR = Color(0xFF7A7064)
+private val DEAD_MASK = Color(0xFF3A342E)
+private val X_EYE = Color(0xFFD8CFC2)
 private val FLASH = Color(0xFFFFE9A8)
 private val SPARK = Color(0xFFF5B83C)
 private val SMOKE = Color(0xFF8A8078)
@@ -49,9 +60,9 @@ private const val BEAT = 500L
 private val SPARKS_NEAR = listOf(1 to 3, 14 to 3, 0 to 7, 15 to 7, 2 to 13, 13 to 13, 7 to 1, 9 to 2)
 private val SPARKS_FAR = listOf(0 to 0, 15 to 0, 0 to 12, 15 to 12, 4 to 0, 11 to 1, 6 to 13, 10 to 13)
 
-const val CLAWD_ASPECT = 16f / LOOK_ROWS
+const val MASCOT_ASPECT = 16f / LOOK_ROWS
 
-data class Look(val skin: Skin = Skin.MODELS, val tint: Tint = Tint.CORAL, val animations: Boolean = true)
+data class Look(val skin: Skin = Skin.MODELS, val tint: Tint = Tint.NATURAL, val animations: Boolean = true)
 
 val LocalLook = compositionLocalOf { Look() }
 
@@ -74,7 +85,7 @@ private data class Pose(
 )
 
 @Composable
-fun Clawd(
+fun Mascot(
     modifier: Modifier = Modifier,
     model: String? = null,
     alive: Boolean = true,
@@ -170,7 +181,7 @@ fun Clawd(
 
     if (dancing && out) {
         LaunchedEffect(seed) {
-            val foot = if (seed % 2 == 0) 3 else 0
+            val foot = if (seed % 2 == 0) 2 else 1
             try {
                 while (true) {
                     delay(BEAT - System.currentTimeMillis() % BEAT)
@@ -251,64 +262,93 @@ fun Clawd(
     }
 
     val base = Color(bodyArgb(look.tint, model))
-    Canvas(modifier.aspectRatio(if (reserveTop) CLAWD_ASPECT else 16f / 10f)) {
+    Canvas(modifier.aspectRatio(if (reserveTop) MASCOT_ASPECT else 16f / (LOOK_ROWS - SPRITE_TOP))) {
         val u = size.width / 16f
-        val oy = if (reserveTop) 0f else -LOOK_TOP * u
+        val oy = if (reserveTop) 0f else -SPRITE_TOP * u
         val p = pose
         val ox = p.shake * 0.5f * u
         val dy = p.dy
+        val flash = p.boom == 1
+        val warm = feel.heat * (if (p.throb) 1f else 0.72f)
         val body = when {
             !alive -> C.deadBody
-            p.boom == 1 -> FLASH
+            flash -> FLASH
             out -> CHARRED
-            feel.heat > 0f -> lerp(base, HOT, feel.heat * (if (p.throb) 1f else 0.72f))
+            feel.heat > 0f -> lerp(base, HOT, warm)
             else -> base
+        }
+        val shade = if (flash) FLASH else lerp(body, Color.Black, 0.24f)
+        val fur = when {
+            !alive -> DEAD_FUR
+            flash -> FLASH
+            out -> CHARRED_FUR
+            feel.heat > 0f -> lerp(FUR_COLOR, HOT_FUR, warm)
+            else -> FUR_COLOR
+        }
+        val mask = when {
+            !alive -> DEAD_MASK
+            flash -> FLASH
+            out -> CHARRED_MASK
+            else -> MASK_COLOR
+        }
+        fun paint(ch: Char) = when (ch) {
+            'B' -> body
+            'b' -> shade
+            'L' -> fur
+            'M' -> mask
+            else -> if (flash) FLASH else NOSE_COLOR
         }
         fun rect(x: Float, y: Float, w: Float, h: Float, c: Color) =
             drawRect(c, Offset(ox + x * u, oy + y * u), Size(w * u + 0.6f, h * u + 0.6f))
         fun rect(x: Int, y: Int, w: Int, h: Int, c: Color) = rect(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), c)
 
-        BODY.forEachIndexed { r, row ->
-            val y = LOOK_TOP + r * 2
+        SPRITE.forEachIndexed { r, row ->
             row.forEachIndexed { c, ch ->
                 if (ch == '.') return@forEachIndexed
+                val color = paint(ch)
                 when {
-                    r == 4 -> {
-                        val leg = LEG_COLS.indexOf(c)
-                        val lifted = (p.legs == 1 && leg % 2 == 0) || (p.legs == 2 && leg % 2 == 1) || leg == p.foot
+                    r == FEET_ROW -> {
+                        val side = if (c < 8) 1 else 2
                         when {
-                            dy > 0 -> rect(c, y + 1, 1, 1, body)
-                            lifted -> rect(c, y, 1, 1, body)
-                            else -> rect(c, y, 1, 2, body)
+                            dy > 0 -> rect(c.toFloat(), r + 0.5f, 1f, 0.5f, color)
+                            p.legs == side || p.foot == side -> rect(c.toFloat(), r.toFloat(), 1f, 0.5f, color)
+                            else -> rect(c, r, 1, 1, color)
                         }
                     }
-                    r == 2 && ((p.arm < 0 && c <= 1) || (p.arm > 0 && c >= 14)) -> rect(c, y - 1 + dy, 1, 2, body)
-                    else -> rect(c, y + dy, 1, 2, body)
+                    r in EAR_ROWS && ((p.arm < 0 && c in LEFT_EAR) || (p.arm > 0 && c in RIGHT_EAR)) -> {
+                        rect(c, r - 1 + dy, 1, 1, color)
+                        if (r == EAR_ROWS.last) rect(c, r + dy, 1, 1, color)
+                    }
+                    else -> rect(c, r + dy, 1, 1, color)
                 }
             }
         }
 
-        val eyeY = LOOK_TOP + 2 + dy
+        val eyeY = EYE_ROW + dy
         if (alive && !out) {
             EYE_COLS.forEach { e ->
                 val x = (e + p.look).toFloat()
-                if (blink || sleepy) rect(x, eyeY + 1.2f, 1f, 0.4f, C.eye) else rect(x, eyeY.toFloat(), 1f, 2f, C.eye)
+                if (blink || sleepy) {
+                    rect(x, eyeY + 1.6f, 2f, 0.4f, C.eye)
+                } else {
+                    rect(x, eyeY.toFloat(), 2f, 2f, C.eye)
+                    rect(x, eyeY.toFloat(), 1f, 1f, SHINE)
+                }
             }
         } else {
-            val stroke = u * 0.5f
+            val stroke = u * 0.45f
             EYE_COLS.forEach { col ->
-                val cx = ox + (col + 0.5f) * u
-                val cy = oy + (eyeY + 1) * u
+                val cx = ox + (col + 1f) * u
+                val cy = oy + (eyeY + 1f) * u
                 val hw = u * 0.95f
-                val hh = u * 1.24f
-                drawLine(C.eye, Offset(cx - hw, cy - hh), Offset(cx + hw, cy + hh), stroke, StrokeCap.Square)
-                drawLine(C.eye, Offset(cx - hw, cy + hh), Offset(cx + hw, cy - hh), stroke, StrokeCap.Square)
+                drawLine(X_EYE, Offset(cx - hw, cy - hw), Offset(cx + hw, cy + hw), stroke, StrokeCap.Square)
+                drawLine(X_EYE, Offset(cx - hw, cy + hw), Offset(cx + hw, cy - hw), stroke, StrokeCap.Square)
             }
         }
 
         acc?.let { a -> accessoryPixels(a).forEach { rect(it.x, it.y + dy, it.w, it.h, Color(it.argb)) } }
 
-        if (p.drop >= 0) rect(14, p.drop + dy, 1, 2, SWEAT)
+        if (p.drop >= 0) rect(15, p.drop + dy, 1, 2, SWEAT)
         if (p.note != 0) {
             val nx = if (p.note > 0) 13 else 0
             val ny = p.noteDy

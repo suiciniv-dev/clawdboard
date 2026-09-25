@@ -62,7 +62,7 @@ fun PinPad(
         val landscape = maxWidth > maxHeight
         val info: @Composable () -> Unit = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = 380.dp)) {
-                Clawd(Modifier.width(92.dp), seed = 42, reserveTop = false)
+                Mascot(Modifier.width(92.dp), seed = 42, reserveTop = false)
                 Spacer(Modifier.height(16.dp))
                 Text(title, color = C.text, fontSize = 26.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                 subtitle?.let { Text(it, color = C.muted, fontSize = 15.sp, textAlign = TextAlign.Center) }
@@ -227,7 +227,7 @@ fun SetupScreen(repo: Repository, st: Repository.State) {
         val landscape = maxWidth > maxHeight
         val hero: @Composable () -> Unit = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Clawd(Modifier.width(150.dp), seed = 7, reserveTop = false)
+                Mascot(Modifier.width(150.dp), seed = 7, reserveTop = false)
                 Spacer(Modifier.height(18.dp))
                 Text("Clawdboard", color = C.text, fontSize = 38.sp, fontFamily = Fredoka, fontWeight = FontWeight.Bold)
                 Text("uso do Claude na sua mesa", color = C.muted, fontSize = 15.sp)
