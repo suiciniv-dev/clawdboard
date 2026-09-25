@@ -30,6 +30,7 @@ data class Prefs(
     val skin: Skin = Skin.MODELS,
     val tint: Tint = Tint.CORAL,
     val animations: Boolean = true,
+    val music: Boolean = false,
 ) {
     fun sanitized() = copy(
         refreshSec = refreshSec.coerceIn(REFRESH_OPTIONS.first(), REFRESH_OPTIONS.last()),
@@ -43,6 +44,7 @@ data class Prefs(
         .put("pixelShift", pixelShift).put("autostart", autostart).put("panelEnabled", panelEnabled)
         .put("backdrop", backdrop.name).put("zoom", zoom)
         .put("skin", skin.name).put("tint", tint.name).put("animations", animations)
+        .put("music", music)
 
     fun merge(o: JSONObject): Prefs = copy(
         refreshSec = if (o.has("refreshSec")) o.optInt("refreshSec", refreshSec) else refreshSec,
@@ -59,6 +61,7 @@ data class Prefs(
         skin = enumOr(o.str("skin"), skin),
         tint = enumOr(o.str("tint"), tint),
         animations = if (o.has("animations")) o.optBoolean("animations", animations) else animations,
+        music = if (o.has("music")) o.optBoolean("music", music) else music,
     ).sanitized()
 
     companion object {

@@ -19,6 +19,9 @@ import dev.clawdboard.core.SelfTest
 import dev.clawdboard.core.enumOr
 import dev.clawdboard.ui.ClawdboardApp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +38,11 @@ class MainActivity : ComponentActivity() {
         val repo = repo
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) { repo.runLoops() }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repo.settings.flow.map { it.music }.distinctUntilChanged().collectLatest { on -> if (on) repo.music.watch() }
+            }
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -56,6 +64,11 @@ class MainActivity : ComponentActivity() {
         setContent { ClawdboardApp(repo) }
     }
 
+    override fun onResume() {
+        super.onResume()
+        repo.music.poke()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleDevIntent(intent)
@@ -68,6 +81,8 @@ class MainActivity : ComponentActivity() {
         val pf = if (i.hasExtra("pf")) i.getIntExtra("pf", 22).toDouble() else 22.0
         if (!repo.enterDemo(p5, p7, pf)) return
         if (i.getBooleanExtra("nudge", false)) repo.nudge.force()
+        val music = i.hasExtra("music")
+        if (music) repo.music.demo(playing = i.getBooleanExtra("playing", true))
         repo.updateSettings { p ->
             p.copy(
                 mode = enumOr(i.getStringExtra("mode"), p.mode),
@@ -76,6 +91,7 @@ class MainActivity : ComponentActivity() {
                 zoom = i.getIntExtra("zoom", p.zoom),
                 skin = enumOr(i.getStringExtra("skin"), p.skin),
                 tint = enumOr(i.getStringExtra("tint"), p.tint),
+                music = if (music) i.getBooleanExtra("music", p.music) else p.music,
             )
         }
     }

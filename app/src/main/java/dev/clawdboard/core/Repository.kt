@@ -33,6 +33,7 @@ class Repository(private val app: Context) {
     val history = History(app)
     val panel = PanelServer(app, this)
     val nudge = Nudge(app)
+    val music = Music(app)
 
     data class State(
         val provisioned: Boolean = false,
@@ -411,6 +412,13 @@ class Repository(private val app: Context) {
             .put("options", Prefs.optionsJson())
             .put("look", lookJson(settings.value))
             .put("mascots", mascotsJson(s.usage, s.status))
+            .put("music", musicJson())
             .put("panelUrl", s.panelUrl ?: JSONObject.NULL)
+    }
+
+    private fun musicJson(): Any {
+        val t = music.track.value
+        if (!settings.value.music || t == null) return JSONObject.NULL
+        return JSONObject().put("playing", t.playing).put("title", t.title).put("artist", t.artist).put("app", t.app)
     }
 }

@@ -6,6 +6,7 @@ Painel de uso do Claude para um celular Android parado na mesa. É a versão par
 Deixe um celular Android velho na mesa e ele vira um painel sempre ligado: quanto da sessão de 5 horas e da semana você
 já usou, quanto falta para liberar, se algum modelo está com problema no status.claude.com e as últimas notícias da Anthropic.
 Os modelos aparecem como Clawds em pixel art que piscam, dormem quando a sessão está zerada, suam perto do limite e estouram em 100%.
+Com a tela de música ligada, mostra o que está tocando no celular e os mascotes dançam enquanto a música toca.
 
 Projeto pessoal de fã, sem vínculo com a Anthropic. Clawd é o mascote do Claude Code.
 
@@ -25,11 +26,13 @@ Projeto pessoal de fã, sem vínculo com a Anthropic. Clawd é o mascote do Clau
 | Sessão zerada: dormindo (skin Coroas, cor lavanda) | Limite próprio do Fable em 100%: só ele esgota |
 | <img src="prints/1.2.0/03-skins-natal.png" alt="Skin de Natal"> | <img src="prints/1.3.0/03-popup-feedback.png" alt="Cartão de feedback"> |
 | Skin de Natal | Cartão de feedback, de tempos em tempos |
+| <img src="prints/1.4.0/01-musica-paisagem.png" alt="Tela de música"> | <img src="prints/1.4.0/03-mascotes-dancando.png" alt="Mascotes dançando"> |
+| Tela de música com os controles e os mascotes dançando | Com música tocando, dançam em todas as telas |
 
 | | | |
 |---|---|---|
-| <img src="prints/1.2.0/11-zoom150-retrato-painel.png" alt="Painel em retrato"> | <img src="prints/1.2.0/12-zoom150-retrato-mascotes.png" alt="Mascotes em retrato"> | <img src="prints/1.2.0/13-zoom150-retrato-relogio.png" alt="Relógio em retrato"> |
-| Painel em retrato | Mascotes em retrato | Relógio de mesa |
+| <img src="prints/1.2.0/11-zoom150-retrato-painel.png" alt="Painel em retrato"> | <img src="prints/1.2.0/12-zoom150-retrato-mascotes.png" alt="Mascotes em retrato"> | <img src="prints/1.4.0/02-musica-retrato.png" alt="Música em retrato"> |
+| Painel em retrato | Mascotes em retrato | Música em retrato |
 
 Painel web, aberto no navegador do PC pela rede local:
 
@@ -47,9 +50,10 @@ Painel web, aberto no navegador do PC pela rede local:
 | Modos de tela | Estático, mascotes, carrossel ou relógio de mesa: dashboard, mascotes grandes, gráfico de 7 dias, notícias da Anthropic e relógio |
 | Histórico de 7 dias | Uma amostra a cada 30 min, no armazenamento interno. Tempo com o app fechado vira buraco no gráfico |
 | Troca de token | Só escrita, testada ao vivo na API antes de salvar, sem reset |
+| Música | Opcional. Mostra capa, faixa e artista do que toca no celular (Spotify, YouTube Music ou qualquer app com player do Android), com play, pausa, anterior, próxima, barra para pular e os botões extras do app. Os mascotes dançam enquanto a música toca |
 
 Telas: dashboard, **mascotes** (sessão e semana em cima, os quatro Clawds grandes no rodapé com a barra de uso de cada modelo),
-gráfico de 7 dias, notícias e relógio. Todas têm layout próprio em paisagem e em retrato; no retrato o relógio empilha horas e minutos.
+gráfico de 7 dias, notícias, relógio e música (quando ligada). Todas têm layout próprio em paisagem e em retrato; no retrato o relógio empilha horas e minutos.
 
 Barra de cada modelo: quando a API informa um limite próprio do modelo (limite semanal por modelo, hoje só o Fable no plano Team),
 a barra é colorida. Os outros modelos consomem do limite semanal geral, então mostram esse valor em cinza.
@@ -62,6 +66,13 @@ Animações: além de piscar, eles olham para os lados, mexem as patas, acenam e
 Com a sessão de 5 horas zerada eles dormem (olho fechado e um Z). A partir de 85% suam e ficam agitados; a partir de 90%
 vão ficando vermelhos e pulsam, e de 95% em diante tremem. Em 100% estouram e ficam chamuscados, com olhos em X e fumaça, marcados "esgotado".
 Sessão ou semana geral em 100% esgota os quatro; o limite próprio do Fable em 100% esgota só ele. Dá para desligar as animações nos ajustes.
+
+Música: ligue em Configurações → Música → "Tela de música". O Clawdboard não toca nada: ele lê e controla o player do app
+que está tocando, pela sessão de mídia do Android. Para isso o Android exige acesso às notificações, que você libera pelo botão
+"Liberar acesso"; o app não lê as notificações, só usa esse acesso para enxergar o player. A tela mostra a capa do álbum, o nome
+e o ícone do app que está tocando (um toque abre o app direto no player, para trocar de playlist), a barra de progresso e os botões.
+Enquanto a música toca, todos os mascotes dançam em todas as telas, no painel web também: com sono acordam e dançam, suados dançam
+suando e esgotados ficam parados batendo o pé. Pausou, eles param. No carrossel a tela de música só entra quando há algo tocando.
 
 Em cima de cada mascote grande vai só o percentual: barra colorida é limite próprio do modelo, barra cinza é o limite geral.
 
@@ -112,6 +123,10 @@ O APK de cada versão fica na aba [Releases](../../releases); compilando localme
 2. Gerar o próprio token com `claude setup-token` no PC dele. Cada pessoa usa o próprio token.
 3. Abrir o endereço que aparece na tela do celular para configurar pelo navegador do PC.
 
+Na tela de música, o botão "Liberar acesso" abre a lista de acesso às notificações. Em APK instalado pelo navegador ou por um
+gerenciador de arquivos, o Android 13 em diante pode avisar que é uma "configuração restrita". Nesse caso: Configurações → Apps →
+Clawdboard → ⋮ → Permitir configurações restritas, e tente de novo.
+
 Abrir sozinho no boot depende de uma permissão que só o ADB concede. Sem ela, o app funciona normal, só não abre sozinho depois de reiniciar:
 
 ```powershell
@@ -145,13 +160,14 @@ Ferramentas de diagnóstico via ADB:
 adb shell am start -n dev.clawdboard.preview/dev.clawdboard.MainActivity --ez demo true --es mode MASCOTS --es orient PORTRAIT
 # demo: dados de exemplo, só age quando não há token; mode, orient e backdrop são opcionais
 # também: --ei zoom 150, --es skin XMAS, --es tint RAINBOW, --ei p5 0 (sessão zerada, dormem), --ei p7 97 (vermelhos), --ei pf 100 (só o Fable esgota), --ez nudge true (mostra o cartão de feedback)
+# --ez music true liga a tela de música com uma faixa de exemplo tocando (mascotes dançando); --ez playing false deixa pausada
 adb shell am start -n dev.clawdboard/.MainActivity --ez selftest true  # testa o cofre no aparelho
 adb logcat -s ClawdSelfTest
 ```
 
 ## Estrutura
 
-- `core/` rede, cofre, histórico, ajustes e o servidor do painel
+- `core/` rede, cofre, histórico, ajustes, música (sessão de mídia do Android) e o servidor do painel
 - `ui/` telas em Jetpack Compose e o Clawd em pixel art
 - `assets/panel.html` painel web, sem dependências externas
 

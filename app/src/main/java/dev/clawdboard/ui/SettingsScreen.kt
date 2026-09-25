@@ -39,6 +39,7 @@ import dev.clawdboard.core.Nudge
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.clawdboard.BuildConfig
 import dev.clawdboard.core.Backdrop
 import dev.clawdboard.core.Brightness
@@ -145,9 +146,32 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
             Toggle(
                 "Animações",
                 "Olham para os lados, mexem as patas e acenam. Dormem com a sessão zerada, suam a partir de 85%, " +
-                    "ficam vermelhos a partir de 90% e estouram em 100%.",
+                    "ficam vermelhos a partir de 90% e estouram em 100%. Com a tela de música ligada, dançam enquanto a música toca.",
                 prefs.animations,
             ) { v -> repo.updateSettings { it.copy(animations = v) } }
+
+            Section("Música")
+            Toggle(
+                "Tela de música",
+                "Mostra o que está tocando no celular, com play, pausa e troca de faixa. Enquanto a música toca, os mascotes dançam em todas as telas.",
+                prefs.music,
+            ) { v -> repo.updateSettings { it.copy(music = v) } }
+            if (prefs.music) {
+                val access by repo.music.access.collectAsStateWithLifecycle()
+                if (access) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Acesso ao player liberado", color = C.ok, fontSize = 14.sp)
+                    if (!prefs.animations) Hint("Com as animações desligadas, os mascotes não dançam.")
+                } else {
+                    Hint("Para ver o que está tocando, o Android pede acesso às notificações. O Clawdboard usa esse acesso só para ler e controlar o player; as notificações não são lidas.")
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        colors = ButtonDefaults.buttonColors(containerColor = C.clawd, contentColor = C.bg),
+                        onClick = { repo.music.openAccess(context) },
+                    ) { Text("Liberar acesso") }
+                    Hint("Se o Android avisar que é uma configuração restrita: Configurações → Apps → Clawdboard → ⋮ → Permitir configurações restritas, e tente de novo.")
+                }
+            }
 
             Section("Trocar token")
             Hint("Só escrita: o token atual nunca é mostrado. O novo é testado na API antes de ser salvo.")

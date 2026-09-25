@@ -100,6 +100,14 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 .cl.shake .all{animation:shake 1.2s step-end infinite}
 .cl.nolook .eyes,.cl.sleepy .la,.cl.sleepy .lb,.cl.sleepy .arm,.cl.dead .bod,.cl.dead .la,.cl.dead .lb,.cl.dead .arm{animation:none}
 .cl.sleepy .bod{animation:breathe 2.9s step-end infinite;animation-delay:var(--d)}
+.cl .note{opacity:0}
+.cl.dance .bod{animation:bounce .5s step-end infinite}
+.cl.dance .la{animation:hopA 1s step-end infinite}
+.cl.dance .lb{animation:hopB 1s step-end infinite}
+.cl.dance .arm{animation:armUp 1s step-end infinite}
+.cl.dance .nl{animation:noteL 2s step-end infinite}
+.cl.dance .nr{animation:noteR 2s step-end infinite}
+.cl.tap .lb{animation:tap .5s step-end infinite}
 .still .cl,.still .cl *{animation:none!important}
 @keyframes blink{0%{opacity:0}96%{opacity:1}98%{opacity:0}}
 @keyframes look{0%{transform:none}70%{transform:translateX(var(--lx))}80%{transform:none}}
@@ -112,6 +120,13 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 @keyframes drip{0%{transform:none;opacity:1}15%{transform:translateY(1px)}30%{transform:translateY(2px)}45%{transform:translateY(3px)}60%{opacity:0}}
 @keyframes puff{0%{transform:none;opacity:.8}25%{transform:translateY(-1px)}50%{transform:translateY(-2px);opacity:.6}75%{transform:translateY(-3px);opacity:.4}90%{opacity:0}}
 @keyframes throb{50%{filter:brightness(1.22)}}
+@keyframes bounce{0%{transform:translateY(1px)}50%{transform:none}}
+@keyframes hopA{0%{transform:none}50%{transform:translateY(-1px)}75%{transform:none}}
+@keyframes hopB{0%{transform:none}75%{transform:translateY(-1px)}}
+@keyframes armUp{0%{transform:translateY(-1px)}50%{transform:none}}
+@keyframes noteL{0%{opacity:1;transform:translateY(1px)}25%{transform:none}50%{opacity:0}}
+@keyframes noteR{0%{opacity:0}50%{opacity:1;transform:translateY(1px)}75%{transform:none}}
+@keyframes tap{0%{transform:translateY(-1px)}50%{transform:none}}
 @keyframes shake{0%{transform:translateX(.5px)}6%{transform:translateX(-.5px)}12%{transform:translateX(.5px)}18%{transform:translateX(-.5px)}24%{transform:none}}
 @media (prefers-reduced-motion:reduce){.cl,.cl *{animation:none!important}}
 @media (max-width:620px){.big{font-size:66px}.mascots{grid-template-columns:repeat(2,1fr);row-gap:22px}.two{grid-template-columns:1fr}.clock{display:none}}
@@ -160,6 +175,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
     <div class="card gap">
       <h2>Modelos</h2>
       <div class="mascots" id="mascots"></div>
+      <div id="nowPlaying" class="small muted hidden" style="margin-top:8px"></div>
       <div class="dim small" style="margin-top:10px">Barra colorida é o limite próprio do modelo. Cinza é o limite semanal geral, que vale para todos.</div>
     </div>
 
@@ -209,6 +225,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
           <label class="check"><input type="checkbox" id="oAuto">Abrir sozinho quando o celular ligar</label>
           <label class="check"><input type="checkbox" id="oPanel">Painel web ligado</label>
           <label class="check"><input type="checkbox" id="oAnim">Animações dos mascotes</label>
+          <label class="check"><input type="checkbox" id="oMusic">Tela de música (os mascotes dançam com a música do celular)</label>
           <div id="setMsg" class="msg"></div>
         </form>
       </div>
@@ -258,7 +275,8 @@ function sprite(model, m, i){
   const lk = state && state.look, def = model && lk ? lk.models[model] : null;
   const T = def ? lk.top : 0;
   const down = !!(m && m.down), out = !!(m && !down && m.mood === "EXHAUSTED");
-  const sleepy = !!(m && !down && !out && m.mood === "SLEEPY");
+  const dancing = !!(m && !down && state && state.music && state.music.playing);
+  const sleepy = !!(m && !down && !out && !dancing && m.mood === "SLEEPY");
   const sweaty = !!(m && !down && !out && m.mood === "SWEATY");
   const heat = m && !down && !out ? m.heat : 0;
   const base = def ? def.body : "#d77757";
@@ -277,7 +295,11 @@ function sprite(model, m, i){
   if (sweaty) extra += r(14, 3, 1, 2, ` class="drop" fill="#8fd3f4"`);
   if (sleepy) extra += `<g class="z" fill="#a89a86">${r(13, 0, 3, 1)}${r(15, 1, 1, 1)}${r(14, 2, 1, 1)}${r(13, 3, 3, 1)}</g>`;
   if (out) extra += `<g class="smoke" fill="#8a8078">${r(7, 3, 1, 1)}${r(8, 2, 1, 1, ` opacity=".6"`)}</g>`;
-  const cls = ["cl", sleepy && "sleepy", heat > 0 && "hot", heat >= .5 && "shake", def && def.kind === "GLASSES" && "nolook", (down || out) && "dead"].filter(Boolean).join(" ");
+  if (dancing && !out) {
+    const note = x => `${r(x + 1, 0, 2, 1)}${r(x + 1, 1, 1, 1)}${r(x, 2, 2, 1)}`;
+    extra += `<g class="note ${i % 2 ? "nl" : "nr"}" fill="#b9a6f2">${note(i % 2 ? 0 : 13)}</g><g class="note ${i % 2 ? "nr" : "nl"}" fill="#b9a6f2">${note(i % 2 ? 13 : 0)}</g>`;
+  }
+  const cls = ["cl", sleepy && "sleepy", heat > 0 && "hot", heat >= .5 && !dancing && "shake", def && def.kind === "GLASSES" && "nolook", (down || out) && "dead", dancing && !out && "dance", dancing && out && "tap"].filter(Boolean).join(" ");
   const style = `--d:${-(i * 2.3 + .7).toFixed(1)}s;--lx:${i % 2 ? -1 : 1}px`;
   return `<svg class="${cls}" style="${style}" viewBox="0 0 16 ${T + 10}" fill="${body}" aria-hidden="true"><g class="all"><g class="bod">${torso}${arms}${eyes}${acc}</g>${legs}${extra}</g></svg>`;
 }
@@ -354,6 +376,9 @@ function renderMascots(list){
   const box = $("mascots");
   box.classList.toggle("still", !(state.look && state.look.animations));
   setHTML(box, html);
+  const mu = state.music, np = $("nowPlaying");
+  np.classList.toggle("hidden", !mu);
+  if (mu) setHTML(np, `${mu.playing ? "Tocando" : "Pausado"} no celular: <b>${esc(mu.title || "sem título")}</b>${mu.artist ? " · " + esc(mu.artist) : ""} <span class="dim">(${esc(mu.app)})</span>`);
 }
 
 function renderStatus(st, now){
@@ -443,7 +468,7 @@ function render(){
   fillSelect($("oZoom"), o.zoom.map(v => ({id:v, label: v + "%"})), st.zoom);
   fillSelect($("oSkin"), o.skin, st.skin);
   fillSelect($("oTint"), o.tint, st.tint);
-  $("oShift").checked = st.pixelShift; $("oAuto").checked = st.autostart; $("oPanel").checked = st.panelEnabled; $("oAnim").checked = st.animations;
+  $("oShift").checked = st.pixelShift; $("oAuto").checked = st.autostart; $("oPanel").checked = st.panelEnabled; $("oAnim").checked = st.animations; $("oMusic").checked = st.music;
   const mail = s.contact ? ` · <a href="mailto:${esc(s.contact)}?subject=${encodeURIComponent("Clawdboard " + s.version)}">feedback e sugestões</a>` : "";
   $("foot").innerHTML = `Clawdboard ${esc(s.version)} · criado por Vinícius Pires da Silva${mail} · ${esc(s.panelUrl || "")}`;
 }
@@ -508,7 +533,7 @@ $("fSettings").addEventListener("change", async () => {
   const body = {
     refreshSec: +$("oRefresh").value, source: $("oSource").value, mode: $("oMode").value, dwellSec: +$("oDwell").value,
     brightness: $("oBright").value, orientation: $("oOrient").value, backdrop: $("oBackdrop").value, zoom: +$("oZoom").value,
-    skin: $("oSkin").value, tint: $("oTint").value, animations: $("oAnim").checked,
+    skin: $("oSkin").value, tint: $("oTint").value, animations: $("oAnim").checked, music: $("oMusic").checked,
     pixelShift: $("oShift").checked, autostart: $("oAuto").checked, panelEnabled: $("oPanel").checked,
   };
   if (!body.panelEnabled && !confirm("Desligar o painel? Para religar, use os ajustes no próprio celular.")) { $("oPanel").checked = true; return; }

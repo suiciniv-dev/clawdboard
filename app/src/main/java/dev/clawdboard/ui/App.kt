@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.clawdboard.core.Music
 import dev.clawdboard.core.Repository
 import dev.clawdboard.core.Sample
 import dev.clawdboard.core.ScreenMode
@@ -56,13 +58,15 @@ import kotlin.random.Random
 import kotlinx.coroutines.delay
 
 private enum class Overlay { NONE, PIN, SETTINGS }
-private enum class Page { DASH, MASCOTS, CHART, NEWS, CLOCK }
+private enum class Page { DASH, MASCOTS, CHART, NEWS, CLOCK, MUSIC }
 
 @Composable
 fun ClawdboardApp(repo: Repository) {
     val st by repo.state.collectAsStateWithLifecycle()
     val prefs by repo.settings.flow.collectAsStateWithLifecycle()
     val history by repo.history.flow.collectAsStateWithLifecycle()
+    val track by repo.music.track.collectAsStateWithLifecycle()
+    val dancing = prefs.music && track?.playing == true
 
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
@@ -80,7 +84,7 @@ fun ClawdboardApp(repo: Repository) {
     }
 
     val look = remember(prefs.skin, prefs.tint, prefs.animations) { Look(prefs.skin, prefs.tint, prefs.animations) }
-    CompositionLocalProvider(LocalNow provides now, LocalLook provides look) {
+    CompositionLocalProvider(LocalNow provides now, LocalLook provides look, LocalDance provides dancing) {
         ClawdTheme {
             Box(
                 Modifier
@@ -110,7 +114,7 @@ fun ClawdboardApp(repo: Repository) {
                     else -> Zoomed(prefs.zoom) {
                         Box(Modifier.fillMaxSize()) {
                             Shifted(prefs.pixelShift) {
-                                Screens(st, prefs.mode, prefs.dwellSec, history, onSettings = { overlay = Overlay.PIN })
+                                Screens(st, prefs.mode, prefs.dwellSec, history, repo.music.takeIf { prefs.music }, dancing, onSettings = { overlay = Overlay.PIN })
                             }
                             FeedbackCard(repo, Modifier.align(Alignment.BottomCenter))
                         }
@@ -148,37 +152,45 @@ private fun Screens(
     mode: ScreenMode,
     dwellSec: Int,
     history: List<Sample>,
+    music: Music?,
+    musicPlaying: Boolean,
     onSettings: () -> Unit,
 ) {
-    val pages = Page.entries
+    val pages = if (music != null) Page.entries else Page.entries - Page.MUSIC
     val home = when (mode) {
         ScreenMode.CLOCK -> Page.CLOCK
         ScreenMode.MASCOTS -> Page.MASCOTS
         else -> Page.DASH
     }
-    var page by remember { mutableStateOf(home) }
+    var chosen by remember { mutableStateOf(home) }
+    val page = if (chosen in pages) chosen else home
+    val playing by rememberUpdatedState(musicPlaying)
     var swipeDir by remember { mutableIntStateOf(0) }
     fun go(step: Int) {
         swipeDir = step
-        page = pages[(page.ordinal + step + pages.size) % pages.size]
+        chosen = pages[(pages.indexOf(chosen).coerceAtLeast(0) + step + pages.size) % pages.size]
     }
-    LaunchedEffect(mode) { swipeDir = 0; page = home }
-    LaunchedEffect(mode, dwellSec, page) {
+    LaunchedEffect(mode) { swipeDir = 0; chosen = home }
+    LaunchedEffect(mode, dwellSec, page, pages) {
         if (mode == ScreenMode.CAROUSEL) {
             delay(dwellSec * 1000L)
             swipeDir = 0
-            page = pages[(page.ordinal + 1) % pages.size]
+            var i = pages.indexOf(page)
+            do {
+                i = (i + 1) % pages.size
+            } while (pages[i] == Page.MUSIC && !playing)
+            chosen = pages[i]
         } else if (page != home) {
             delay(30_000)
             swipeDir = 0
-            page = home
+            chosen = home
         }
     }
 
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
+            .pointerInput(pages) {
                 var dragged = 0f
                 detectHorizontalDragGestures(
                     onDragStart = { dragged = 0f },
@@ -208,9 +220,10 @@ private fun Screens(
                 Page.CHART -> ChartPage(history, st, landscape)
                 Page.NEWS -> NewsPage(st.news, landscape)
                 Page.CLOCK -> ClockPage(st, landscape)
+                Page.MUSIC -> if (music != null) MusicPage(music, st, landscape, compact)
             }
         }
-        PageDots(pages.size, page.ordinal, Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp))
+        PageDots(pages.size, pages.indexOf(page), Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp))
         Box(
             Modifier
                 .align(Alignment.BottomEnd)

@@ -43,6 +43,8 @@ private val CHARRED = Color(0xFF4E3530)
 private val FLASH = Color(0xFFFFE9A8)
 private val SPARK = Color(0xFFF5B83C)
 private val SMOKE = Color(0xFF8A8078)
+private val NOTE = Color(0xFFB9A6F2)
+private const val BEAT = 500L
 
 private val SPARKS_NEAR = listOf(1 to 3, 14 to 3, 0 to 7, 15 to 7, 2 to 13, 13 to 13, 7 to 1, 9 to 2)
 private val SPARKS_FAR = listOf(0 to 0, 15 to 0, 0 to 12, 15 to 12, 4 to 0, 11 to 1, 6 to 13, 10 to 13)
@@ -52,6 +54,8 @@ const val CLAWD_ASPECT = 16f / LOOK_ROWS
 data class Look(val skin: Skin = Skin.MODELS, val tint: Tint = Tint.CORAL, val animations: Boolean = true)
 
 val LocalLook = compositionLocalOf { Look() }
+
+val LocalDance = compositionLocalOf { false }
 
 private data class Pose(
     val dy: Int = 0,
@@ -64,6 +68,9 @@ private data class Pose(
     val shake: Int = 0,
     val boom: Int = 0,
     val smoke: Int = -1,
+    val foot: Int = -1,
+    val note: Int = 0,
+    val noteDy: Int = 0,
 )
 
 @Composable
@@ -78,15 +85,20 @@ fun Clawd(
     val look = LocalLook.current
     val acc = accessoryFor(look.skin, model)
     val animate = look.animations && alive
-    val mood = if (alive) feel.mood else Mood.NORMAL
+    val dancing = LocalDance.current && animate
+    val mood = when {
+        !alive -> Mood.NORMAL
+        dancing && feel.mood == Mood.SLEEPY -> Mood.NORMAL
+        else -> feel.mood
+    }
     val out = mood == Mood.EXHAUSTED
     val sleepy = mood == Mood.SLEEPY
-    val trembling = feel.heat >= 0.5f
+    val trembling = feel.heat >= 0.5f && !dancing
     var blink by remember { mutableStateOf(false) }
     var pose by remember { mutableStateOf(Pose()) }
     var wasOut by remember { mutableStateOf(out) }
 
-    LaunchedEffect(mood, animate) { pose = Pose() }
+    LaunchedEffect(mood, animate, dancing) { pose = Pose() }
 
     if (alive && !sleepy && !out) {
         LaunchedEffect(seed) {
@@ -105,7 +117,7 @@ fun Clawd(
         }
     }
 
-    if (animate && !sleepy && !out) {
+    if (animate && !sleepy && !out && !dancing) {
         LaunchedEffect(seed, mood, acc) {
             val rnd = Random(seed * 131 + (System.nanoTime() % 100_000).toInt())
             delay(rnd.nextLong(1_500, 6_000))
@@ -133,6 +145,41 @@ fun Clawd(
                 }
                 pose = pose.copy(dy = 0, look = 0, legs = 0, arm = 0)
                 delay(if (mood == Mood.SWEATY) 1_200L + rnd.nextLong(2_000) else 4_000L + rnd.nextLong(7_000))
+            }
+        }
+    }
+
+    if (dancing && !out) {
+        LaunchedEffect(seed, acc) {
+            val side = if (seed % 2 == 0) 1 else -1
+            try {
+                while (true) {
+                    delay(BEAT - System.currentTimeMillis() % BEAT)
+                    val beat = System.currentTimeMillis() / BEAT
+                    val arm = if (beat % 2 == 0L) side else -side
+                    val note = if ((beat / 2 + seed) % 2 == 0L) 1 else -1
+                    pose = pose.copy(dy = 1, legs = 0, arm = arm, look = if (acc == Accessory.GLASSES) 0 else arm, note = note, noteDy = 1)
+                    delay(BEAT / 2)
+                    pose = pose.copy(dy = 0, legs = if (beat % 2 == 0L) 1 else 2, noteDy = 0)
+                }
+            } finally {
+                pose = pose.copy(dy = 0, legs = 0, arm = 0, look = 0, note = 0, noteDy = 0)
+            }
+        }
+    }
+
+    if (dancing && out) {
+        LaunchedEffect(seed) {
+            val foot = if (seed % 2 == 0) 3 else 0
+            try {
+                while (true) {
+                    delay(BEAT - System.currentTimeMillis() % BEAT)
+                    pose = pose.copy(foot = foot)
+                    delay(BEAT / 2)
+                    pose = pose.copy(foot = -1)
+                }
+            } finally {
+                pose = pose.copy(foot = -1)
             }
         }
     }
@@ -228,7 +275,7 @@ fun Clawd(
                 when {
                     r == 4 -> {
                         val leg = LEG_COLS.indexOf(c)
-                        val lifted = (p.legs == 1 && leg % 2 == 0) || (p.legs == 2 && leg % 2 == 1)
+                        val lifted = (p.legs == 1 && leg % 2 == 0) || (p.legs == 2 && leg % 2 == 1) || leg == p.foot
                         when {
                             dy > 0 -> rect(c, y + 1, 1, 1, body)
                             lifted -> rect(c, y, 1, 1, body)
@@ -262,6 +309,11 @@ fun Clawd(
         acc?.let { a -> accessoryPixels(a).forEach { rect(it.x, it.y + dy, it.w, it.h, Color(it.argb)) } }
 
         if (p.drop >= 0) rect(14, p.drop + dy, 1, 2, SWEAT)
+        if (p.note != 0) {
+            val nx = if (p.note > 0) 13 else 0
+            val ny = p.noteDy
+            rect(nx + 1, ny, 2, 1, NOTE); rect(nx + 1, ny + 1, 1, 1, NOTE); rect(nx, ny + 2, 2, 1, NOTE)
+        }
         if (p.z) {
             rect(13, 0, 3, 1, C.muted); rect(15, 1, 1, 1, C.muted)
             rect(14, 2, 1, 1, C.muted); rect(13, 3, 3, 1, C.muted)

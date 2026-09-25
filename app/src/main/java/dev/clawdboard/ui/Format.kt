@@ -58,6 +58,14 @@ fun fmtAgo(ms: Long): String {
     }
 }
 
+fun fmtTrack(ms: Long): String {
+    val s = (ms / 1000).coerceAtLeast(0)
+    val h = s / 3600
+    val m = (s % 3600) / 60
+    val sec = s % 60
+    return if (h > 0) "%d:%02d:%02d".format(h, m, sec) else "%d:%02d".format(m, sec)
+}
+
 fun fmtDateLong(t: ZonedDateTime): String = "${WEEK_LONG[t.dayOfWeek]}, ${t.dayOfMonth} de ${MONTHS[t.monthValue - 1]}"
 
 fun fmtShortDate(ms: Long?): String {
