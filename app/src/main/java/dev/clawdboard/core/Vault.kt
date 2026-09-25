@@ -36,7 +36,7 @@ class Vault(context: Context, prefsName: String = "vault", private val alias: St
 
     @Synchronized
     fun reseal(key: SecretKey, token: String) {
-        val salt = Crypto.unb64(sp.getString("salt", null) ?: error("cofre vazio"))
+        val salt = Crypto.unb64(sp.getString("salt", null) ?: error(txt.emptyVault))
         store(salt, key, token)
     }
 
@@ -47,7 +47,7 @@ class Vault(context: Context, prefsName: String = "vault", private val alias: St
         val inner = try {
             keystoreOpen(Crypto.unb64(sp.getString("blob", null)!!))
         } catch (e: Exception) {
-            return Unlock.Broken("Chave do Keystore indisponível: ${e.javaClass.simpleName}")
+            return Unlock.Broken(txt.keystoreUnavailable(e.javaClass.simpleName))
         }
         val key = Crypto.derive(pin, salt)
         return try {
@@ -110,8 +110,8 @@ class Vault(context: Context, prefsName: String = "vault", private val alias: St
         const val DEFAULT_ALIAS = "clawdboard.vault"
 
         fun pinProblem(pin: String): String? = when {
-            pin.length !in 4..8 -> "O PIN precisa ter de 4 a 8 dígitos"
-            !pin.all { it.isDigit() } -> "O PIN só pode ter números"
+            pin.length !in 4..8 -> txt.pinLength
+            !pin.all { it.isDigit() } -> txt.pinDigits
             else -> null
         }
     }

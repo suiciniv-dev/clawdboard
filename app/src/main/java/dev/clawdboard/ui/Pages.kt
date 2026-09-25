@@ -46,6 +46,7 @@ import dev.clawdboard.core.Sample
 import dev.clawdboard.core.UsageSnapshot
 import dev.clawdboard.core.UsageWindow
 import dev.clawdboard.core.feelOf
+import dev.clawdboard.core.txt
 import java.time.ZoneId
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -61,8 +62,8 @@ fun DashboardPage(st: Repository.State, landscape: Boolean, compact: Boolean = f
         val big = if (compact) 52.sp else 60.sp
         Row(Modifier.fillMaxSize().then(pad)) {
             Column(Modifier.weight(1.3f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceEvenly) {
-                UsageBlock("Sessão", "janela de 5 horas", usage?.fiveHour, big = big, compact = compact)
-                UsageBlock("Semana", "janela de 7 dias", usage?.sevenDay, scoped = usage?.scoped.orEmpty(), big = big, compact = compact)
+                UsageBlock(txt.session, txt.sessionWindow, usage?.fiveHour, big = big, compact = compact)
+                UsageBlock(txt.week, txt.weekWindow, usage?.sevenDay, scoped = usage?.scoped.orEmpty(), big = big, compact = compact)
             }
             Spacer(Modifier.width(if (compact) 24.dp else 32.dp))
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -76,8 +77,8 @@ fun DashboardPage(st: Repository.State, landscape: Boolean, compact: Boolean = f
         val big = if (compact) 52.sp else 72.sp
         Column(Modifier.fillMaxSize().then(pad), verticalArrangement = Arrangement.SpaceEvenly) {
             SmallClock()
-            UsageBlock("Sessão", "janela de 5 horas", usage?.fiveHour, big = big, compact = compact)
-            UsageBlock("Semana", "janela de 7 dias", usage?.sevenDay, scoped = usage?.scoped.orEmpty(), big = big, compact = compact)
+            UsageBlock(txt.session, txt.sessionWindow, usage?.fiveHour, big = big, compact = compact)
+            UsageBlock(txt.week, txt.weekWindow, usage?.sevenDay, scoped = usage?.scoped.orEmpty(), big = big, compact = compact)
             MascotRow(st.status, usage = usage, mascotWidth = 64.dp)
             StatusLine(st.status)
             Footer(st, compact)
@@ -101,11 +102,11 @@ private fun Footer(st: Repository.State, compact: Boolean) {
     Column {
         val at = st.lastPushAt
         if (st.usage != null && at != null) {
-            Text("atualizado ${fmtAgo(now - at)} · Claude Code", color = C.dim, fontSize = 13.sp)
+            Text(txt.updatedAgo(fmtAgo(now - at)), color = C.dim, fontSize = 13.sp)
         } else {
-            Text("aguardando o Claude Code · conecte pelo painel no PC", color = C.warn, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(txt.waitingClaude, color = C.warn, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        if (!compact) st.panelUrl?.let { Text("painel: ${it.removePrefix("http://")}", color = C.dim, fontSize = 12.sp) }
+        if (!compact) st.panelUrl?.let { Text(txt.panelShort(it.removePrefix("http://")), color = C.dim, fontSize = 12.sp) }
     }
 }
 
@@ -118,19 +119,19 @@ fun ChartPage(history: List<Sample>, st: Repository.State, landscape: Boolean = 
     Column(Modifier.fillMaxSize().then(PAGE_PAD)) {
         if (landscape) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Últimos 7 dias", color = C.text, fontSize = 26.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+                Text(txt.last7Days, color = C.text, fontSize = 26.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
-                Legend(C.clawd, "sessão 5h")
+                Legend(C.clawd, txt.legendSession)
                 Spacer(Modifier.width(18.dp))
-                Legend(C.lav, "semana 7d")
+                Legend(C.lav, txt.legendWeek)
             }
         } else {
-            Text("Últimos 7 dias", color = C.text, fontSize = 26.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+            Text(txt.last7Days, color = C.text, fontSize = 26.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Row {
-                Legend(C.clawd, "sessão 5h")
+                Legend(C.clawd, txt.legendSession)
                 Spacer(Modifier.width(18.dp))
-                Legend(C.lav, "semana 7d")
+                Legend(C.lav, txt.legendWeek)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -205,10 +206,10 @@ fun ChartPage(history: List<Sample>, st: Repository.State, landscape: Boolean = 
         Spacer(Modifier.height(8.dp))
         val peak5 = inWindow.mapNotNull { it.p5 }.maxOrNull()
         val stats: @Composable () -> Unit = {
-            Text("pico 5h: ${fmtPct(peak5)}", color = C.muted, fontSize = 14.sp)
-            Text("semana agora: ${fmtPct(st.usage?.sevenDay?.percent)}", color = C.muted, fontSize = 14.sp)
+            Text(txt.peak5h(fmtPct(peak5)), color = C.muted, fontSize = 14.sp)
+            Text(txt.weekNow(fmtPct(st.usage?.sevenDay?.percent)), color = C.muted, fontSize = 14.sp)
             Text(
-                if (inWindow.isEmpty()) "sem amostras ainda, uma a cada 30 min" else "${inWindow.size} de 336 amostras",
+                if (inWindow.isEmpty()) txt.noSamples else txt.samples(inWindow.size),
                 color = C.dim, fontSize = 14.sp,
             )
         }
@@ -231,7 +232,7 @@ fun NewsPage(news: List<NewsItem>, landscape: Boolean) {
         }
         Spacer(Modifier.height(12.dp))
         if (news.isEmpty()) {
-            Text("Carregando notícias...", color = C.muted, fontSize = 16.sp)
+            Text(txt.loadingNews, color = C.muted, fontSize = 16.sp)
         }
         FitColumn(Modifier.fillMaxWidth().weight(1f)) {
             news.take(if (landscape) 5 else 9).forEachIndexed { i, item ->
@@ -343,8 +344,8 @@ fun MascotsPage(st: Repository.State, landscape: Boolean, compact: Boolean = fal
                 (if (compact) Modifier.padding(bottom = 8.dp) else Modifier.weight(1f)).fillMaxWidth(),
                 verticalArrangement = if (compact) Arrangement.spacedBy(4.dp) else Arrangement.SpaceEvenly,
             ) {
-                WideUsageRow("Sessão", "5 horas", usage?.fiveHour, compact)
-                WideUsageRow("Semana", "7 dias", usage?.sevenDay, compact)
+                WideUsageRow(txt.session, txt.hours5, usage?.fiveHour, compact)
+                WideUsageRow(txt.week, txt.days7, usage?.sevenDay, compact)
             }
             Spacer(Modifier.fillMaxWidth().height(1.dp).background(C.line))
             Row(
@@ -362,8 +363,8 @@ fun MascotsPage(st: Repository.State, landscape: Boolean, compact: Boolean = fal
             SmallClockLine()
             val big = if (compact) 52.sp else 64.sp
             Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.SpaceEvenly) {
-                UsageBlock("Sessão", "janela de 5 horas", usage?.fiveHour, big = big, compact = compact)
-                UsageBlock("Semana", "janela de 7 dias", usage?.sevenDay, big = big, compact = compact)
+                UsageBlock(txt.session, txt.sessionWindow, usage?.fiveHour, big = big, compact = compact)
+                UsageBlock(txt.week, txt.weekWindow, usage?.sevenDay, big = big, compact = compact)
             }
             Spacer(Modifier.fillMaxWidth().height(1.dp).background(C.line))
             Column(Modifier.weight(1.1f).fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.SpaceEvenly) {
@@ -425,11 +426,11 @@ private fun WideUsageRow(title: String, window: String, w: UsageWindow?, compact
         Column(Modifier.width(150.dp), horizontalAlignment = Alignment.End) {
             val reset = w?.resetsAt
             if (reset != null) {
-                Text("libera em", color = C.muted, fontSize = 12.sp)
+                Text(txt.resetsIn, color = C.muted, fontSize = 12.sp)
                 Text(fmtLeft(reset - now), color = C.text, fontSize = 24.sp, fontFamily = Fredoka, fontWeight = FontWeight.Medium)
                 Text(fmtAt(reset, now), color = C.muted, fontSize = 12.sp)
             } else {
-                Text(if (w == null) "aguardando dados" else "sem reset", color = C.dim, fontSize = 13.sp)
+                Text(if (w == null) txt.waitingData else txt.noReset, color = C.dim, fontSize = 13.sp)
             }
         }
     }
@@ -470,8 +471,8 @@ private fun BigMascot(model: String, index: Int, st: Repository.State, mu: Model
             Text(model, color = if (down || out) C.bad else C.text, fontSize = 17.sp, fontFamily = Fredoka, fontWeight = FontWeight.Medium)
             if (!compact) Text(
                 when {
-                    down -> "instável"
-                    out -> "esgotado"
+                    down -> txt.unstable
+                    out -> txt.exhausted
                     else -> " "
                 },
                 color = C.bad, fontSize = 12.sp,

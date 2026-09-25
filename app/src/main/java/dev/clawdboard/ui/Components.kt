@@ -37,6 +37,7 @@ import dev.clawdboard.core.ScopedLimit
 import dev.clawdboard.core.StatusSnapshot
 import dev.clawdboard.core.UsageSnapshot
 import dev.clawdboard.core.UsageWindow
+import dev.clawdboard.core.txt
 
 @Composable
 fun UsageBar(percent: Double?, modifier: Modifier = Modifier, height: Dp = 14.dp) {
@@ -96,11 +97,11 @@ fun UsageBlock(
             val reset = window?.resetsAt
             Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(bottom = 8.dp)) {
                 if (reset != null) {
-                    if (!compact) Text("libera em", color = C.muted, fontSize = 12.sp)
+                    if (!compact) Text(txt.resetsIn, color = C.muted, fontSize = 12.sp)
                     Text(fmtLeft(reset - now), color = C.text, fontSize = 24.sp, fontFamily = Fredoka, fontWeight = FontWeight.Medium)
                     Text(fmtAt(reset, now), color = C.muted, fontSize = 12.sp)
                 } else {
-                    Text(if (window == null) "aguardando dados" else "sem reset agendado", color = C.dim, fontSize = 13.sp)
+                    Text(if (window == null) txt.waitingData else txt.noResetScheduled, color = C.dim, fontSize = 13.sp)
                 }
             }
         }
@@ -155,8 +156,8 @@ fun MascotRow(
 @Composable
 fun StatusLine(status: StatusSnapshot?, modifier: Modifier = Modifier) {
     val (dot, text) = when {
-        status == null -> C.dim to "Verificando status.claude.com..."
-        status.incidents.isEmpty() -> C.ok to "Todos os sistemas operacionais"
+        status == null -> C.dim to txt.checkingStatus
+        status.incidents.isEmpty() -> C.ok to txt.allOperational
         else -> {
             val first = status.incidents.first().name
             val more = status.incidents.size - 1

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import dev.clawdboard.BuildConfig
 import dev.clawdboard.core.Nudge
 import dev.clawdboard.core.Repository
+import dev.clawdboard.core.txt
 import kotlinx.coroutines.delay
 
 fun sendFeedback(context: Context) {
@@ -85,8 +86,8 @@ fun FeedbackCard(repo: Repository, modifier: Modifier = Modifier) {
             Mascot(Modifier.width(60.dp), seed = 5, reserveTop = false)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text("Está gostando do Banditboard?", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
-                Text("Feedbacks, sugestões ou quer apoiar? Escreve para ${Nudge.EMAIL}", color = C.muted, fontSize = 14.sp)
+                Text(txt.enjoying, color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+                Text(txt.feedbackAsk(Nudge.EMAIL), color = C.muted, fontSize = 14.sp)
                 Spacer(Modifier.height(8.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Button(
@@ -96,9 +97,9 @@ fun FeedbackCard(repo: Repository, modifier: Modifier = Modifier) {
                             visible = false
                             sendFeedback(context)
                         },
-                    ) { Text("Mandar e-mail") }
-                    TextButton(onClick = { repo.nudge.later(System.currentTimeMillis()); visible = false }) { Text("Agora não", color = C.muted) }
-                    TextButton(onClick = { repo.nudge.never(); visible = false }) { Text("Não mostrar mais", color = C.dim) }
+                    ) { Text(txt.sendEmail) }
+                    TextButton(onClick = { repo.nudge.later(System.currentTimeMillis()); visible = false }) { Text(txt.notNow, color = C.muted) }
+                    TextButton(onClick = { repo.nudge.never(); visible = false }) { Text(txt.dontShowAgain, color = C.dim) }
                 }
             }
         }

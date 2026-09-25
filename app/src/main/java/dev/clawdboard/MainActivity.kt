@@ -97,6 +97,7 @@ class MainActivity : ComponentActivity() {
                 skin = enumOr(i.getStringExtra("skin"), p.skin),
                 tint = enumOr(i.getStringExtra("tint"), p.tint),
                 music = if (music) i.getBooleanExtra("music", p.music) else p.music,
+                language = enumOr(i.getStringExtra("lang"), p.language),
             )
         }
     }

@@ -82,7 +82,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         }
         val len = headers["content-length"]?.toIntOrNull() ?: 0
         if (len > 64 * 1024) {
-            write(s, json(413, err("Corpo grande demais")))
+            write(s, json(413, err(txt.bodyTooLarge)))
             return
         }
         val body = ByteArray(len)
@@ -174,7 +174,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
     private fun text(code: Int, body: String) = Resp(code, "text/plain; charset=utf-8", body.toByteArray(Charsets.UTF_8))
 
     private fun route(method: String, path: String, query: String, headers: Map<String, String>, body: String): Resp {
-        if (!hostAllowed(headers["host"])) return json(403, err("Host não permitido"))
+        if (!hostAllowed(headers["host"])) return json(403, err(txt.hostNotAllowed))
         val host = headers["host"].orEmpty()
         if (method == "GET" && (path == "/" || path == "/index.html")) {
             return Resp(
@@ -186,22 +186,22 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         if (method == "GET" && path == "/fredoka.ttf") return Resp(200, "font/ttf", font)
         if (method == "GET" && path == "/pc/install.ps1") {
             val script = repo.installerFor(host, param(query, "k"))
-                ?: return text(403, "Write-Host 'Chave do Banditboard inválida. Copie o comando de novo no painel.' -ForegroundColor Red")
+                ?: return text(403, "Write-Host '${txt.badPairKeyScript}' -ForegroundColor Red")
             return text(200, script)
         }
-        if (!path.startsWith("/api/")) return json(404, err("Não encontrado"))
-        if (method == "POST" && headers["x-clawdboard"] != "1") return json(403, err("Requisição sem cabeçalho do painel"))
+        if (!path.startsWith("/api/")) return json(404, err(txt.notFound))
+        if (method == "POST" && headers["x-clawdboard"] != "1") return json(403, err(txt.missingHeader))
 
         val sid = cookie(headers, "cb_session")
         val authed = sessionValid(sid)
-        val o = if (method == "POST" && body.isNotBlank()) runCatching { JSONObject(body) }.getOrElse { return json(400, err("JSON inválido")) } else JSONObject()
+        val o = if (method == "POST" && body.isNotBlank()) runCatching { JSONObject(body) }.getOrElse { return json(400, err(txt.badJson)) } else JSONObject()
 
         when ("$method $path") {
             "GET /api/info" -> return json(200, repo.infoJson().put("authenticated", authed))
 
             "POST /api/push" -> {
-                if (!repo.pushKeyValid(headers["x-clawdboard-key"])) return json(401, err("Chave de pareamento inválida"))
-                return if (repo.receivePush(o)) json(200, ok()) else json(400, err("Sem rate_limits"))
+                if (!repo.pushKeyValid(headers["x-clawdboard-key"])) return json(401, err(txt.badPairKey))
+                return if (repo.receivePush(o)) json(200, ok()) else json(400, err(txt.noRateLimits))
             }
 
             "POST /api/setup" -> {
@@ -209,7 +209,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
                 return when (r) {
                     Repository.Outcome.Ok -> json(200, ok(), listOf(newSessionCookie()))
                     is Repository.Outcome.Error -> json(400, err(r.message))
-                    else -> json(400, err("Falha na configuração"))
+                    else -> json(400, err(txt.setupFailed))
                 }
             }
 
@@ -217,8 +217,8 @@ class PanelServer(private val app: Context, private val repo: Repository) {
                 val r = runBlocking { repo.unlock(o.optString("pin")) }
                 return when (r) {
                     Repository.Outcome.Ok -> json(200, ok(), listOf(newSessionCookie()))
-                    is Repository.Outcome.WrongPin -> json(401, err("PIN incorreto").put("remaining", r.remaining))
-                    Repository.Outcome.Wiped -> json(410, err("10 PINs errados: o aparelho foi apagado"))
+                    is Repository.Outcome.WrongPin -> json(401, err(txt.wrongPinPanel).put("remaining", r.remaining))
+                    Repository.Outcome.Wiped -> json(410, err(txt.wipedPanel))
                     is Repository.Outcome.Error -> json(400, err(r.message))
                 }
             }
@@ -229,7 +229,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
             }
         }
 
-        if (!authed) return json(401, err("Faça login com o PIN").put("needLogin", true))
+        if (!authed) return json(401, err(txt.loginFirst).put("needLogin", true))
 
         return when ("$method $path") {
             "GET /api/state" -> json(200, repo.stateJson(host))
@@ -242,13 +242,13 @@ class PanelServer(private val app: Context, private val repo: Repository) {
             "POST /api/pair" -> when (val r = runBlocking { repo.newPairKey() }) {
                 Repository.Outcome.Ok -> json(200, ok().put("pairCommand", repo.pairCommand(host)))
                 is Repository.Outcome.Error -> json(400, err(r.message))
-                else -> json(400, err("Falha ao gerar a chave"))
+                else -> json(400, err(txt.keyFailed))
             }
 
             "POST /api/pin" -> when (val r = runBlocking { repo.changePin(o.optString("pin"), o.optString("newPin")) }) {
                 Repository.Outcome.Ok -> json(200, ok())
-                is Repository.Outcome.WrongPin -> json(401, err("PIN atual incorreto").put("remaining", r.remaining))
-                Repository.Outcome.Wiped -> json(410, err("10 PINs errados: o aparelho foi apagado"))
+                is Repository.Outcome.WrongPin -> json(401, err(txt.wrongCurrentPinPanel).put("remaining", r.remaining))
+                Repository.Outcome.Wiped -> json(410, err(txt.wipedPanel))
                 is Repository.Outcome.Error -> json(400, err(r.message))
             }
 
@@ -258,12 +258,12 @@ class PanelServer(private val app: Context, private val repo: Repository) {
             }
 
             "POST /api/reset" -> {
-                if (o.optString("confirm") != "APAGAR") return json(400, err("Digite APAGAR para confirmar"))
+                if (o.optString("confirm").trim().uppercase() !in setOf(Pt.eraseWord, En.eraseWord)) return json(400, err(txt.typeToConfirm(txt.eraseWord)))
                 repo.factoryReset()
                 json(200, ok(), listOf(clearCookie))
             }
 
-            else -> json(404, err("Rota desconhecida"))
+            else -> json(404, err(txt.unknownRoute))
         }
     }
 

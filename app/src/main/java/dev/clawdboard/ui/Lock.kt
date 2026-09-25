@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.clawdboard.core.Repository
+import dev.clawdboard.core.txt
 import kotlinx.coroutines.launch
 
 @Composable
@@ -104,7 +105,7 @@ fun PinPad(
         }
         if (onCancel != null) {
             TextButton(onClick = onCancel, modifier = Modifier.align(Alignment.TopStart)) {
-                Text("Cancelar", color = C.muted)
+                Text(txt.cancel, color = C.muted)
             }
         }
     }
@@ -168,9 +169,9 @@ fun LockScreen(repo: Repository, st: Repository.State) {
     var msg by remember { mutableStateOf<String?>(null) }
     val remaining = 10 - st.failures
     PinPad(
-        title = "Banditboard bloqueado",
-        subtitle = "Digite o PIN para liberar o painel",
-        message = msg ?: if (st.failures > 0) "Restam $remaining tentativas antes de apagar tudo" else null,
+        title = txt.lockedTitle,
+        subtitle = txt.enterPin,
+        message = msg ?: if (st.failures > 0) txt.triesBeforeWipe(remaining) else null,
         messageIsError = msg != null || st.failures > 0,
         busy = busy,
         onSubmit = { pin ->
@@ -178,14 +179,14 @@ fun LockScreen(repo: Repository, st: Repository.State) {
             scope.launch {
                 msg = when (val r = repo.unlock(pin)) {
                     Repository.Outcome.Ok -> null
-                    is Repository.Outcome.WrongPin -> "PIN incorreto. Restam ${r.remaining} tentativas."
+                    is Repository.Outcome.WrongPin -> txt.wrongPin(r.remaining)
                     Repository.Outcome.Wiped -> null
                     is Repository.Outcome.Error -> r.message
                 }
                 busy = false
             }
         },
-        footer = st.panelUrl?.let { "ou faça login no painel: $it" },
+        footer = st.panelUrl?.let { txt.orLoginPanel(it) },
     )
 }
 
@@ -195,8 +196,8 @@ fun PinGate(repo: Repository, st: Repository.State, onOk: () -> Unit, onCancel: 
     var busy by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf<String?>(null) }
     PinPad(
-        title = "Configurações",
-        subtitle = "Confirme o PIN",
+        title = txt.settings,
+        subtitle = txt.confirmPin,
         message = msg,
         messageIsError = true,
         busy = busy,
@@ -205,7 +206,7 @@ fun PinGate(repo: Repository, st: Repository.State, onOk: () -> Unit, onCancel: 
             scope.launch {
                 when (val r = repo.unlock(pin)) {
                     Repository.Outcome.Ok -> onOk()
-                    is Repository.Outcome.WrongPin -> msg = "PIN incorreto. Restam ${r.remaining} tentativas."
+                    is Repository.Outcome.WrongPin -> msg = txt.wrongPin(r.remaining)
                     Repository.Outcome.Wiped -> Unit
                     is Repository.Outcome.Error -> msg = r.message
                 }
@@ -230,24 +231,24 @@ fun SetupScreen(repo: Repository, st: Repository.State) {
                 Mascot(Modifier.width(150.dp), seed = 7, reserveTop = false)
                 Spacer(Modifier.height(18.dp))
                 Text("Banditboard", color = C.text, fontSize = 38.sp, fontFamily = Fredoka, fontWeight = FontWeight.Bold)
-                Text("uso do Claude na sua mesa", color = C.muted, fontSize = 15.sp)
+                Text(txt.tagline, color = C.muted, fontSize = 15.sp)
             }
         }
         val steps: @Composable () -> Unit = {
             Column(Modifier.widthIn(max = 460.dp)) {
                 if (st.wiped) {
                     Text(
-                        "O PIN foi errado 10 vezes ou o aparelho foi resetado. A chave de pareamento e o histórico foram apagados.",
+                        txt.wipedNotice,
                         color = C.bad, fontSize = 14.sp,
                     )
                     Spacer(Modifier.height(14.dp))
                 }
-                Step("1", "Abra no navegador do PC:", st.panelUrl ?: "conecte o celular ao Wi-Fi...")
-                Step("2", "Crie um PIN.", null)
-                Step("3", "Rode no PowerShell o comando que aparece. O Claude Code passa a mandar o uso para cá.", null)
+                Step("1", txt.step1, st.panelUrl ?: txt.connectWifi)
+                Step("2", txt.step2, null)
+                Step("3", txt.step3, null)
                 Spacer(Modifier.height(10.dp))
                 TextButton(onClick = { local = true }) {
-                    Text("Prefiro criar o PIN aqui no celular", color = C.clawd, fontSize = 15.sp)
+                    Text(txt.pinHere, color = C.clawd, fontSize = 15.sp)
                 }
             }
         }
@@ -295,12 +296,12 @@ private fun SetupForm(repo: Repository, onBack: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
-            TextButton(onClick = onBack) { Text("Voltar", color = C.muted) }
-            Text("Configurar", color = C.text, fontSize = 28.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
-            Text("O PIN protege os ajustes e o painel web. Depois, conecte o Claude Code pelo painel no PC.", color = C.muted, fontSize = 14.sp)
+            TextButton(onClick = onBack) { Text(txt.back, color = C.muted) }
+            Text(txt.setupTitle, color = C.text, fontSize = 28.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+            Text(txt.setupHint, color = C.muted, fontSize = 14.sp)
             Spacer(Modifier.height(16.dp))
-            SecretField(pin, { pin = it.filter(Char::isDigit).take(8) }, "PIN (4 a 8 dígitos)", numeric = true)
-            SecretField(pin2, { pin2 = it.filter(Char::isDigit).take(8) }, "Repita o PIN", numeric = true)
+            SecretField(pin, { pin = it.filter(Char::isDigit).take(8) }, txt.pinField, numeric = true)
+            SecretField(pin2, { pin2 = it.filter(Char::isDigit).take(8) }, txt.repeatPin, numeric = true)
             Spacer(Modifier.height(8.dp))
             error?.let { Text(it, color = C.bad, fontSize = 14.sp); Spacer(Modifier.height(8.dp)) }
             Button(
@@ -308,7 +309,7 @@ private fun SetupForm(repo: Repository, onBack: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = C.clawd, contentColor = C.bg),
                 onClick = {
                     if (pin != pin2) {
-                        error = "Os PINs não conferem"
+                        error = txt.pinsDontMatch
                         return@Button
                     }
                     busy = true
@@ -320,7 +321,7 @@ private fun SetupForm(repo: Repository, onBack: () -> Unit) {
                     }
                 },
             ) {
-                Text(if (busy) "Salvando..." else "Salvar", fontWeight = FontWeight.SemiBold)
+                Text(if (busy) txt.saving else txt.save, fontWeight = FontWeight.SemiBold)
             }
         }
     }

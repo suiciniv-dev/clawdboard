@@ -7,13 +7,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
-enum class ScreenMode(val label: String) { STATIC("Estático"), MASCOTS("Mascotes"), CAROUSEL("Carrossel"), CLOCK("Relógio") }
-enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto AMOLED") }
-enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
-enum class Orientation(val label: String) { LANDSCAPE("Paisagem"), PORTRAIT("Retrato"), AUTO("Automática") }
-enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"), CROWNS("Coroas"), XMAS("Natal") }
-enum class Species(val label: String) { RACCOON("Racco"), CLAWD("Clawd") }
-enum class Tint(val label: String) { NATURAL("Natural"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
+enum class ScreenMode { STATIC, MASCOTS, CAROUSEL, CLOCK }
+enum class Backdrop { DEFAULT, BLACK }
+enum class Brightness(val level: Float) { SYSTEM(-1f), LOW(0.05f), MEDIUM(0.35f), HIGH(1f) }
+enum class Orientation { LANDSCAPE, PORTRAIT, AUTO }
+enum class Skin { CLASSIC, MODELS, CROWNS, XMAS }
+enum class Species { RACCOON, CLAWD }
+enum class Tint { NATURAL, RAINBOW, LAVENDER, MINT, BUBBLEGUM }
 
 data class Prefs(
     val mode: ScreenMode = ScreenMode.CAROUSEL,
@@ -31,6 +31,7 @@ data class Prefs(
     val music: Boolean = false,
     val species: Species = Species.RACCOON,
     val clawdUnlocked: Boolean = false,
+    val language: Language = Language.AUTO,
 ) {
     fun mascot() = if (clawdUnlocked) species else Species.RACCOON
 
@@ -47,6 +48,7 @@ data class Prefs(
         .put("skin", skin.name).put("tint", tint.name).put("animations", animations)
         .put("music", music)
         .put("species", species.name).put("clawdUnlocked", clawdUnlocked)
+        .put("language", language.name)
 
     fun merge(o: JSONObject): Prefs = copy(
         mode = enumOr(o.str("mode"), mode),
@@ -64,24 +66,26 @@ data class Prefs(
         music = if (o.has("music")) o.optBoolean("music", music) else music,
         species = enumOr(o.str("species"), species),
         clawdUnlocked = if (o.has("clawdUnlocked")) o.optBoolean("clawdUnlocked", clawdUnlocked) else clawdUnlocked,
+        language = enumOr(o.str("language"), language),
     ).sanitized()
 
     companion object {
         val DWELL_OPTIONS = listOf(8, 15, 30, 60)
         val ZOOM_OPTIONS = listOf(90, 100, 115, 130, 150)
 
-        fun optionsJson(): JSONObject {
+        fun optionsJson(t: Texts = txt): JSONObject {
             fun <T : Enum<T>> e(values: List<T>, label: (T) -> String) =
                 JSONArray().apply { values.forEach { put(JSONObject().put("id", it.name).put("label", label(it))) } }
             return JSONObject()
                 .put("dwellSec", JSONArray(DWELL_OPTIONS))
                 .put("zoom", JSONArray(ZOOM_OPTIONS))
-                .put("mode", e(ScreenMode.entries) { it.label })
-                .put("brightness", e(Brightness.entries) { it.label })
-                .put("orientation", e(Orientation.entries) { it.label })
-                .put("backdrop", e(Backdrop.entries) { it.label })
-                .put("skin", e(Skin.entries) { it.label })
-                .put("tint", e(Tint.entries) { it.label })
+                .put("mode", e(ScreenMode.entries) { t.label(it) })
+                .put("brightness", e(Brightness.entries) { t.label(it) })
+                .put("orientation", e(Orientation.entries) { t.label(it) })
+                .put("backdrop", e(Backdrop.entries) { t.label(it) })
+                .put("skin", e(Skin.entries) { t.label(it) })
+                .put("tint", e(Tint.entries) { t.label(it) })
+                .put("language", e(Language.entries) { t.label(it) })
         }
     }
 }
@@ -91,7 +95,7 @@ inline fun <reified T : Enum<T>> enumOr(name: String?, fallback: T): T =
 
 class SettingsStore(context: Context) {
     private val sp = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    private val _flow = MutableStateFlow(read())
+    private val _flow = MutableStateFlow(read().also { I18n.language = it.language })
     val flow: StateFlow<Prefs> = _flow.asStateFlow()
     val value: Prefs get() = _flow.value
 
@@ -104,6 +108,7 @@ class SettingsStore(context: Context) {
     fun update(f: (Prefs) -> Prefs): Prefs {
         val p = f(_flow.value).sanitized()
         sp.edit().putString("prefs", p.toJson().toString()).apply()
+        I18n.language = p.language
         _flow.value = p
         return p
     }
@@ -111,6 +116,7 @@ class SettingsStore(context: Context) {
     @Synchronized
     fun clear() {
         sp.edit().clear().apply()
+        I18n.language = Language.AUTO
         _flow.value = Prefs()
     }
 }

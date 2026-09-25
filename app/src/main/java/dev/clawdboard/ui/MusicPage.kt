@@ -68,6 +68,7 @@ import dev.clawdboard.core.Music
 import dev.clawdboard.core.NOTE_PIXELS
 import dev.clawdboard.core.Repository
 import dev.clawdboard.core.Track
+import dev.clawdboard.core.txt
 import kotlin.math.roundToInt
 
 private enum class Glyph { PLAY, PAUSE, NEXT, PREV }
@@ -81,16 +82,16 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
     when {
         !access -> MusicEmpty(
             st,
-            "Falta liberar o acesso",
-            "Em Configurações → Música, toque em \"Liberar acesso\". O Android pede acesso às notificações para mostrar o que está tocando.",
+            txt.needAccess,
+            txt.needAccessHint,
             emptyList(),
         ) {}
         t == null -> {
             val apps = remember { music.apps() }
             MusicEmpty(
                 st,
-                "Nada tocando",
-                "Dê play no Spotify, no YouTube Music ou em outro app de música. Os mascotes dançam junto.",
+                txt.nothingPlaying,
+                txt.nothingPlayingHint,
                 apps,
             ) { music.launch(context, it.pkg) }
         }
@@ -102,7 +103,7 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
             Spacer(Modifier.width(if (compact) 22.dp else 32.dp))
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    AppChip(t.appIcon, t.app, "abrir") { music.open(context) }
+                    AppChip(t.appIcon, t.app, txt.open) { music.open(context) }
                     Spacer(Modifier.width(20.dp))
                     VolumeBar(music, Modifier.weight(1f))
                 }
@@ -120,7 +121,7 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
-            AppChip(t.appIcon, t.app, "abrir") { music.open(context) }
+            AppChip(t.appIcon, t.app, txt.open) { music.open(context) }
             Cover(t, Modifier.weight(1f, fill = false).padding(vertical = 12.dp).widthIn(max = 360.dp).aspectRatio(1f))
             TrackText(t, compact, TextAlign.Center)
             Progress(t, music::seek)
@@ -150,7 +151,7 @@ private fun MusicEmpty(st: Repository.State, title: String, text: String, apps: 
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                apps.forEach { a -> AppChip(a.icon, a.label, "abrir") { onApp(a) } }
+                apps.forEach { a -> AppChip(a.icon, a.label, txt.open) { onApp(a) } }
             }
         }
         Spacer(Modifier.height(22.dp))
@@ -164,7 +165,7 @@ private fun Cover(t: Track, modifier: Modifier) {
         val art = t.art
         if (art != null) {
             val img = remember(art) { art.asImageBitmap() }
-            Image(img, contentDescription = "Capa", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            Image(img, contentDescription = txt.cover, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
             PixelNote(Modifier.fillMaxWidth(0.4f), C.lav)
         }
@@ -210,7 +211,7 @@ private fun TrackText(t: Track, compact: Boolean, align: TextAlign) {
     val size = if (compact) 24.sp else 30.sp
     Column(Modifier.fillMaxWidth()) {
         Text(
-            t.title.ifBlank { "Sem título" }, color = C.text, fontSize = size, lineHeight = size * 1.1f,
+            t.title.ifBlank { txt.untitled }, color = C.text, fontSize = size, lineHeight = size * 1.1f,
             fontFamily = Fredoka, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
             textAlign = align, modifier = Modifier.fillMaxWidth(),
         )
@@ -221,7 +222,7 @@ private fun TrackText(t: Track, compact: Boolean, align: TextAlign) {
                 overflow = TextOverflow.Ellipsis, textAlign = align, modifier = Modifier.fillMaxWidth(),
             )
         }
-        Text(if (t.playing) " " else "pausado", color = C.dim, fontSize = 13.sp, textAlign = align, modifier = Modifier.fillMaxWidth().padding(top = 2.dp))
+        Text(if (t.playing) " " else txt.paused, color = C.dim, fontSize = 13.sp, textAlign = align, modifier = Modifier.fillMaxWidth().padding(top = 2.dp))
     }
 }
 
@@ -277,7 +278,7 @@ private fun VolumeBar(music: Music, modifier: Modifier) {
                 sent = -1
                 version++
             },
-            modifier = Modifier.weight(1f).semantics { contentDescription = "Volume" },
+            modifier = Modifier.weight(1f).semantics { contentDescription = txt.volume },
         )
     }
 }
@@ -355,11 +356,11 @@ private fun Controls(t: Track, music: Music, compact: Boolean) {
     val small = if (compact) 44.dp else 52.dp
     val big = if (compact) 60.dp else 72.dp
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 18.dp)) {
-        RoundButton(small, C.card2, "Faixa anterior", t.canPrev, music::previous) { GlyphIcon(Glyph.PREV, C.text, Modifier.size(small * 0.4f)) }
-        RoundButton(big, C.clawd, if (t.playing) "Pausar" else "Tocar", true, music::playPause) {
+        RoundButton(small, C.card2, txt.prevTrack, t.canPrev, music::previous) { GlyphIcon(Glyph.PREV, C.text, Modifier.size(small * 0.4f)) }
+        RoundButton(big, C.clawd, if (t.playing) txt.pause else txt.play, true, music::playPause) {
             GlyphIcon(if (t.playing) Glyph.PAUSE else Glyph.PLAY, C.bg, Modifier.size(big * 0.4f))
         }
-        RoundButton(small, C.card2, "Próxima faixa", t.canNext, music::next) { GlyphIcon(Glyph.NEXT, C.text, Modifier.size(small * 0.4f)) }
+        RoundButton(small, C.card2, txt.nextTrack, t.canNext, music::next) { GlyphIcon(Glyph.NEXT, C.text, Modifier.size(small * 0.4f)) }
         t.extras.take(if (compact) 2 else 3).forEach { a ->
             RoundButton(small * 0.85f, Color.Transparent, a.name, true, { music.extra(a) }) {
                 val icon = a.icon

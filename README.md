@@ -3,7 +3,7 @@
 **Turn an old Android phone into a Claude Code usage monitor.**
 
 <p align="center">
-  <img src="prints/1.6.0/hero.gif" width="760" alt="Raccoons sleeping with an empty session, waking up, turning red near the limit, bursting at 100% and dancing when music plays">
+  <img src="prints/1.8.0/hero.gif" width="760" alt="Raccoons sleeping with an empty session, waking up, turning red near the limit, bursting at 100% and dancing when music plays">
 </p>
 
 <p align="center">
@@ -31,54 +31,55 @@ an open incident. Each model is Racco, a pixel-art raccoon who sleeps, sweats, b
 - 🖥️ **Web dashboard**: the same view in your PC browser, on the local network, with PIN login
 - 🚦 **Status and news**: open incidents from status.claude.com and the latest Anthropic news
 - 🌙 **AMOLED black**: plus a few pixels of shift per minute against burn-in
+- 🌍 **English and Portuguese**: follows the phone's language, or pick one in the settings
 - 📱 **Portrait and landscape**: a layout for each, and accessibility zoom from 90% to 150%
 
 ## 📱 Screenshots
 
-The app's interface is in Brazilian Portuguese.
+The app speaks English and Brazilian Portuguese. It follows the phone's language, and you can pick one in Settings → Screen → Language.
 
 ### Main screens
 
 | | | |
 |---|---|---|
-| <img src="prints/1.6.0/01-painel.png" alt="Dashboard"> | <img src="prints/1.6.0/02-mascotes.png" alt="Mascots screen"> | <img src="prints/1.6.0/03-relogio-retrato.png" alt="Desk clock in portrait"> |
+| <img src="prints/1.8.0/01-dashboard.png" alt="Dashboard"> | <img src="prints/1.8.0/02-mascots.png" alt="Mascots screen"> | <img src="prints/1.8.0/03-clock-portrait.png" alt="Desk clock in portrait"> |
 | Dashboard | Mascots | Desk clock |
 
 ### Racco reactions
 
 | | | |
 |---|---|---|
-| <img src="prints/1.6.0/04-dormindo.png" alt="Raccoons sleeping"> | <img src="prints/1.6.0/05-suando-88.png" alt="Raccoons sweating at 88%"> | <img src="prints/1.6.0/06-esquentando-97.png" alt="Raccoons red at 97%"> |
+| <img src="prints/1.8.0/04-sleeping.png" alt="Raccoons sleeping"> | <img src="prints/1.8.0/05-sweating-88.png" alt="Raccoons sweating at 88%"> | <img src="prints/1.8.0/06-red-97.png" alt="Raccoons red at 97%"> |
 | Empty session: asleep | 88%: sweating | 97%: red and shaking |
-| <img src="prints/1.6.0/07-esgotados-100.png" alt="All raccoons burst at 100%"> | <img src="prints/1.6.0/08-so-fable-esgotado.png" alt="Only Fable burst"> | <img src="prints/1.6.0/09-dancando.png" alt="Raccoons dancing"> |
+| <img src="prints/1.8.0/07-burst-100.png" alt="All raccoons burst at 100%"> | <img src="prints/1.8.0/08-only-fable.png" alt="Only Fable burst"> | <img src="prints/1.8.0/09-dancing.png" alt="Raccoons dancing"> |
 | 100%: burst | Fable's own limit at 100%: only Fable bursts | Music playing: dancing |
 
 ### Music mode
 
 | | |
 |---|---|
-| <img src="prints/1.6.0/10-musica-paisagem.png" alt="Music screen in landscape"> | <img src="prints/1.6.0/11-musica-retrato.png" width="300" alt="Music screen in portrait"> |
+| <img src="prints/1.8.0/10-music-landscape.png" alt="Music screen in landscape"> | <img src="prints/1.8.0/11-music-portrait.png" width="300" alt="Music screen in portrait"> |
 | Cover, track, controls and volume | Portrait |
 
 ### Skins and settings
 
 | | | |
 |---|---|---|
-| <img src="prints/1.6.0/12-arco-iris.png" alt="Rainbow colors"> | <img src="prints/1.6.0/13-natal.png" alt="Christmas skin"> | <img src="prints/1.6.0/14-ajustes.png" alt="Mascot settings"> |
+| <img src="prints/1.8.0/12-rainbow.png" alt="Rainbow colors"> | <img src="prints/1.8.0/13-christmas.png" alt="Christmas skin"> | <img src="prints/1.8.0/14-settings.png" alt="Mascot settings"> |
 | One color per model | Christmas skin | Settings, at 150% zoom |
 
 ### Web dashboard, AMOLED and credits
 
 | | | |
 |---|---|---|
-| <img src="prints/1.7.0/15-painel-pc.png" alt="Web dashboard on a PC"> | <img src="prints/1.6.0/16-amoled.png" alt="Dashboard in AMOLED black"> | <img src="prints/1.7.0/17-creditos.png" alt="Credits with Racco"> |
+| <img src="prints/1.8.0/15-web-dashboard.png" alt="Web dashboard on a PC"> | <img src="prints/1.8.0/16-amoled.png" alt="Dashboard in AMOLED black"> | <img src="prints/1.8.0/17-credits.png" alt="Credits with Racco"> |
 | Web dashboard in the PC browser | AMOLED black | Credits |
 
 ## 🚀 Quick Start
 
 1. Download the APK from [Releases](../../releases/latest) and install it (allow "install unknown apps" for the app that opens the file).
 2. On your PC, open the address shown on the phone and create a PIN.
-3. On the "Claude Code no PC" card, click "Copiar" and paste the command into PowerShell.
+3. On the "Claude Code on your PC" card, click "Copy" and paste the command into PowerShell.
 4. Keep using Claude Code, in VS Code or in the terminal. After a response, the phone updates.
 
 > A Claude Code hook runs `/usage` after responses, at most every 2 minutes, without using any tokens. Usage from
@@ -88,7 +89,7 @@ The app's interface is in Brazilian Portuguese.
 
 - The phone never holds a Claude token and never calls the Anthropic API. Claude Code on your PC reads your limits with `/usage` and a small script forwards them. The script never reads Claude Code's credentials.
 - The script sends only the percentages and their reset times, nothing from your conversations, files or sessions.
-- Each push carries a 128-bit pairing key. The phone checks it against a SHA-256 hash, and "Gerar nova chave" invalidates the old command at once.
+- Each push carries a 128-bit pairing key. The phone checks it against a SHA-256 hash, and "Create new key" invalidates the old command at once.
 - The pairing key is encrypted with AES-256-GCM using a key derived from your PIN (PBKDF2, 150,000 iterations) and wrapped by an Android Keystore key. The PIN is never stored.
 - 10 wrong PINs in a row wipe the pairing key, the history and the settings.
 - The web dashboard only runs on the local network, asks for the same PIN and only answers when the Host is an IP address, `localhost` or a `.local` name, which blocks DNS rebinding. Logging in on the dashboard also unlocks the phone screen.
@@ -121,7 +122,7 @@ The app's interface is in Brazilian Portuguese.
 
 **First setup.** The phone shows its address, something like `http://192.168.0.15:8080`. The port is the first free one between
 8080 and 8089, and the PC and the phone must be on the same Wi-Fi. You can also create the PIN on the phone itself through
-"Prefiro criar o PIN aqui no celular" and connect Claude Code later from the dashboard. If the router restarts the phone may get a
+"I'd rather create the PIN on this phone" and connect Claude Code later from the dashboard. If the router restarts the phone may get a
 new IP; the screen and the dashboard footer always show the current one. Reserve a fixed IP for the phone in the router's DHCP
 settings to avoid that; if the IP changes, run the command from the dashboard again.
 
@@ -143,8 +144,8 @@ something is playing.
 **Per-model bar.** When `/usage` reports a model's own weekly limit (today only Fable, on some plans), that model's bar is colored.
 The other models draw from the general weekly limit, so they show that value in gray.
 
-**Skins.** "Por modelo" (the default) puts a top hat on Fable, the most expensive one, glasses on Opus, headphones on Sonnet and
-a sprout on Haiku. There are also "Clássico" (no accessory), "Coroas" and "Natal", and five colors: natural (the raccoon's gray), rainbow (one per model),
+**Skins.** "Per model" (the default) puts a top hat on Fable, the most expensive one, glasses on Opus, headphones on Sonnet and
+a sprout on Haiku. There are also "Classic" (no accessory), "Crowns" and "Christmas", and five colors: natural (the raccoon's gray), rainbow (one per model),
 lavender, mint and bubblegum. The web dashboard draws the same skin from the definition the app sends in `state.look`.
 
 **Animations.** Besides blinking, they look around, move their legs, wave, twitch their ears and crouch. With the 5-hour session at zero they sleep
@@ -153,7 +154,7 @@ burst and stay charred, with X eyes and smoke, marked "esgotado". Session or gen
 limit at 100% bursts only Fable. An open incident on status.claude.com that names a model turns its raccoon gray with X eyes.
 Animations can be turned off in the settings.
 
-**Music.** Settings → Música → "Tela de música", then "Liberar acesso" and allow Banditboard. Banditboard plays nothing itself: it reads
+**Music.** Settings → Music → "Music screen", then "Grant access" and allow Banditboard. Banditboard plays nothing itself: it reads
 and controls the player of the app that is playing, through Android's media session. The screen shows the album cover, the track,
 the icon of the app (one tap opens its player, to change playlists), the progress bar, the buttons, the app's extra buttons and the
 volume: the phone's media volume or, when the app sends the sound to another device, that device's volume. While music plays, every
@@ -165,10 +166,10 @@ Settings → Apps → Banditboard → ⋮ → Allow restricted settings, and try
 When the shorter side of the screen drops below 380dp (high zoom or a small phone), the screens switch to a compact layout and hide
 secondary lines.
 
-**Background.** "Tema padrão" uses warm dark tones (#16130f with a coral glow at the bottom). "Preto AMOLED" saves more screen.
+**Background.** "Default theme" uses warm dark tones (#16130f with a coral glow at the bottom). "AMOLED black" saves more screen.
 
 **Feedback.** After 3 days of use a card asks whether you are enjoying the app, with a button that opens an email to
-vinips00@gmail.com. It hides itself after 30 seconds, comes back every 10 days and has "Não mostrar mais". After you send an email
+vinips00@gmail.com. It hides itself after 30 seconds, comes back every 10 days and has "Don't show again". After you send an email
 it only returns in 60 days. The same contact is in the settings credits and in the web dashboard footer.
 
 **Open on boot.** It needs a permission only ADB can grant. Without it the app works normally, it just does not open by itself after a reboot:
@@ -209,7 +210,7 @@ On my machine I use the shortcuts in `scripts\`, which point to Gradle in `D:\An
 Diagnostics over ADB:
 
 ```powershell
-adb shell am start -n dev.clawdboard.preview/dev.clawdboard.MainActivity --ez demo true --es mode MASCOTS --es orient PORTRAIT
+adb shell am start -n dev.clawdboard.preview/dev.clawdboard.MainActivity --ez demo true --es lang EN --es mode MASCOTS --es orient PORTRAIT
 # demo: sample data, only works before a PIN is created; mode, orient and backdrop are optional
 # also: --ei zoom 150, --es skin XMAS, --es tint RAINBOW, --ei p5 0 (empty session, asleep), --ei p7 97 (red), --ez nudge true (feedback card)
 # --ez music true turns on the music screen with a sample track playing (raccoons dancing); --ez playing false leaves it paused
@@ -233,7 +234,7 @@ adb logcat -s ClawdSelfTest
 ## 🤝 Contributing
 
 Issues and pull requests are welcome. For bigger changes, open an issue first so we can talk about it. The code has no comments on
-purpose: explanations go in this README. The app's text is in Brazilian Portuguese. Feedback and ideas: vinips00@gmail.com.
+purpose: explanations go in this README. The app's text lives in `core/Texts.kt`, in English and Brazilian Portuguese. Feedback and ideas: vinips00@gmail.com.
 
 ## 📄 License and disclaimer
 

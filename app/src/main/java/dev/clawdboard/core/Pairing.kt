@@ -36,7 +36,9 @@ class Pairing(private val app: Context) {
 
     fun installer(url: String, key: String): String {
         val usage = asset("pc/usage.ps1").replace("__URL__", url).replace("__KEY__", key)
-        return asset("pc/install.ps1").replace("__USAGE__", usage.trimEnd()).replace("__URL__", url)
+        return asset("pc/install.ps1").replace("__USAGE__", usage.trimEnd())
+            .replace("__T_CONNECTED__", txt.installConnected).replace("__T_BACKUP__", txt.installBackup(""))
+            .replace("__T_EVERY__", txt.installEvery(url)).replace("__URL__", url)
     }
 
     private fun asset(name: String) = app.assets.open(name).use { it.readBytes().toString(Charsets.UTF_8) }

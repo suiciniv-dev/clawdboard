@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import dev.clawdboard.core.Language
 import dev.clawdboard.core.Nudge
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import dev.clawdboard.core.ScreenMode
 import dev.clawdboard.core.Skin
 import dev.clawdboard.core.Species
 import dev.clawdboard.core.Tint
+import dev.clawdboard.core.txt
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -72,140 +74,139 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
     ) {
         Column(Modifier.widthIn(max = 720.dp).fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Configurações", color = C.text, fontSize = 28.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+                Text(txt.settings, color = C.text, fontSize = 28.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text("Fechar", color = C.clawd, fontSize = 16.sp) }
+                TextButton(onClick = onClose) { Text(txt.close, color = C.clawd, fontSize = 16.sp) }
             }
-            st.panelUrl?.let { Text("Painel web: $it  (login com o mesmo PIN)", color = C.muted, fontSize = 14.sp) }
+            st.panelUrl?.let { Text(txt.webPanel(it), color = C.muted, fontSize = 14.sp) }
 
-            Section("Claude Code no PC")
+            Section(txt.claudeOnPc)
             val at = st.lastPushAt
             Text(
-                if (at != null) "Último envio ${fmtAgo(now - at)}" else "Nenhum envio ainda",
+                if (at != null) txt.lastPush(fmtAgo(now - at)) else txt.noPushYet,
                 color = if (at != null) C.ok else C.warn, fontSize = 15.sp,
             )
-            Hint(
-                "O uso vem do próprio Claude Code no PC: um hook roda o /usage ao fim das respostas, no VS Code ou no terminal, " +
-                    "no máximo a cada 2 minutos e sem gastar tokens. O celular não guarda token nenhum. " +
-                    "Para conectar, abra ${st.panelUrl ?: "o painel web"} no PC, entre com o PIN e rode no PowerShell o comando de \"Conectar ao Claude Code\"."
-            )
+            Hint(txt.usageExplain(st.panelUrl))
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = {
                 scope.launch {
                     pairMsg = when (val r = repo.newPairKey()) {
-                        Repository.Outcome.Ok -> true to "Chave nova gerada. Rode o comando do painel de novo no PC."
+                        Repository.Outcome.Ok -> true to txt.newKeyDone
                         is Repository.Outcome.Error -> false to r.message
-                        else -> false to "Não foi possível gerar a chave"
+                        else -> false to txt.newKeyFailed
                     }
                 }
-            }) { Text("Gerar nova chave", color = C.text) }
+            }) { Text(txt.newKey, color = C.text) }
             pairMsg?.let { (ok, m) -> Text(m, color = if (ok) C.ok else C.bad, fontSize = 14.sp) }
 
-            Section("Tela")
-            Label("Modo")
+            Section(txt.screen)
+            Label(txt.language)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ScreenMode.entries.forEach { m -> Chip(m.label, prefs.mode == m) { repo.updateSettings { it.copy(mode = m) } } }
+                Language.entries.forEach { l -> Chip(txt.label(l), prefs.language == l) { repo.updateSettings { it.copy(language = l) } } }
+            }
+            Label(txt.mode)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ScreenMode.entries.forEach { m -> Chip(txt.label(m), prefs.mode == m) { repo.updateSettings { it.copy(mode = m) } } }
             }
             if (prefs.mode == ScreenMode.CAROUSEL) {
-                Label("Tempo em cada tela")
+                Label(txt.dwell)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Prefs.DWELL_OPTIONS.forEach { d -> Chip("${d}s", prefs.dwellSec == d) { repo.updateSettings { it.copy(dwellSec = d) } } }
                 }
             }
-            Label("Fundo")
+            Label(txt.backdrop)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Backdrop.entries.forEach { b -> Chip(b.label, prefs.backdrop == b) { repo.updateSettings { it.copy(backdrop = b) } } }
+                Backdrop.entries.forEach { b -> Chip(txt.label(b), prefs.backdrop == b) { repo.updateSettings { it.copy(backdrop = b) } } }
             }
-            Label("Brilho")
+            Label(txt.brightness)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Brightness.entries.forEach { b -> Chip(b.label, prefs.brightness == b) { repo.updateSettings { it.copy(brightness = b) } } }
+                Brightness.entries.forEach { b -> Chip(txt.label(b), prefs.brightness == b) { repo.updateSettings { it.copy(brightness = b) } } }
             }
-            Label("Orientação")
+            Label(txt.orientation)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Orientation.entries.forEach { o -> Chip(o.label, prefs.orientation == o) { repo.updateSettings { it.copy(orientation = o) } } }
+                Orientation.entries.forEach { o -> Chip(txt.label(o), prefs.orientation == o) { repo.updateSettings { it.copy(orientation = o) } } }
             }
-            Label("Zoom")
+            Label(txt.zoom)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Prefs.ZOOM_OPTIONS.forEach { z -> Chip("$z%", prefs.zoom == z) { repo.updateSettings { it.copy(zoom = z) } } }
             }
-            Hint("Aumenta textos e mascotes das telas e destes ajustes. Com zoom alto, linhas secundárias somem para caber.")
-            Toggle("Mover o conteúdo alguns pixels por minuto", "Protege a tela AMOLED contra marcas", prefs.pixelShift) { v -> repo.updateSettings { it.copy(pixelShift = v) } }
-            Toggle("Abrir sozinho quando o celular ligar", null, prefs.autostart) { v -> repo.updateSettings { it.copy(autostart = v) } }
-            Toggle("Painel web na rede local", st.panelUrl, prefs.panelEnabled) { v -> repo.updateSettings { it.copy(panelEnabled = v) } }
+            Hint(txt.zoomHint)
+            Toggle(txt.pixelShift, txt.pixelShiftHint, prefs.pixelShift) { v -> repo.updateSettings { it.copy(pixelShift = v) } }
+            Toggle(txt.autostart, null, prefs.autostart) { v -> repo.updateSettings { it.copy(autostart = v) } }
+            Toggle(txt.panelToggle, st.panelUrl, prefs.panelEnabled) { v -> repo.updateSettings { it.copy(panelEnabled = v) } }
 
-            Section("Mascotes")
+            Section(txt.mascots)
             MascotRow(st.status, Modifier.widthIn(max = 420.dp), usage = st.usage, mascotWidth = 72.dp)
             if (prefs.clawdUnlocked) {
-                Label("Mascote")
+                Label(txt.mascot)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Species.entries.forEach { m -> Chip(m.label, prefs.species == m) { repo.updateSettings { it.copy(species = m) } } }
+                    Species.entries.forEach { m -> Chip(txt.label(m), prefs.species == m) { repo.updateSettings { it.copy(species = m) } } }
                 }
             }
-            Label("Acessórios")
+            Label(txt.accessories)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Skin.entries.forEach { s -> Chip(s.label, prefs.skin == s) { repo.updateSettings { it.copy(skin = s) } } }
+                Skin.entries.forEach { s -> Chip(txt.label(s), prefs.skin == s) { repo.updateSettings { it.copy(skin = s) } } }
             }
-            if (prefs.skin == Skin.MODELS) Hint("Cartola no Fable, o mais caro. Óculos no Opus, fone no Sonnet e um broto no Haiku.")
-            Label("Cor")
+            if (prefs.skin == Skin.MODELS) Hint(txt.modelsHint)
+            Label(txt.color)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tint.entries.forEach { t -> Chip(t.label, prefs.tint == t) { repo.updateSettings { it.copy(tint = t) } } }
+                Tint.entries.forEach { t -> Chip(txt.label(t), prefs.tint == t) { repo.updateSettings { it.copy(tint = t) } } }
             }
             Toggle(
-                "Animações",
-                "Olham para os lados, mexem as patas e acenam. Dormem com a sessão zerada, suam a partir de 85%, " +
-                    "ficam vermelhos a partir de 90% e estouram em 100%. Com a tela de música ligada, dançam enquanto a música toca.",
+                txt.animations,
+                txt.animationsHint,
                 prefs.animations,
             ) { v -> repo.updateSettings { it.copy(animations = v) } }
 
-            Section("Música")
+            Section(txt.music)
             Toggle(
-                "Tela de música",
-                "Mostra o que está tocando no celular, com play, pausa e troca de faixa. Enquanto a música toca, os mascotes dançam em todas as telas.",
+                txt.musicScreen,
+                txt.musicScreenHint,
                 prefs.music,
             ) { v -> repo.updateSettings { it.copy(music = v) } }
             if (prefs.music) {
                 val access by repo.music.access.collectAsStateWithLifecycle()
                 if (access) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Acesso ao player liberado", color = C.ok, fontSize = 14.sp)
-                    if (!prefs.animations) Hint("Com as animações desligadas, os mascotes não dançam.")
+                    Text(txt.playerAccessOk, color = C.ok, fontSize = 14.sp)
+                    if (!prefs.animations) Hint(txt.noDanceWithoutAnimations)
                 } else {
-                    Hint("Para ver o que está tocando, o Android pede acesso às notificações. O Banditboard usa esse acesso só para ler e controlar o player; as notificações não são lidas.")
+                    Hint(txt.accessWhy)
                     Spacer(Modifier.height(8.dp))
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = C.clawd, contentColor = C.bg),
                         onClick = { repo.music.openAccess(context) },
-                    ) { Text("Liberar acesso") }
-                    Hint("Se o Android avisar que é uma configuração restrita: Configurações → Apps → Banditboard → ⋮ → Permitir configurações restritas, e tente de novo.")
+                    ) { Text(txt.grantAccess) }
+                    Hint(txt.restrictedHint)
                 }
             }
 
-            Section("Trocar PIN")
-            SecretField(curPin, { curPin = it.filter(Char::isDigit).take(8) }, "PIN atual", numeric = true)
-            SecretField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, "Novo PIN", numeric = true)
-            SecretField(newPin2, { newPin2 = it.filter(Char::isDigit).take(8) }, "Repita o novo PIN", numeric = true)
+            Section(txt.changePin)
+            SecretField(curPin, { curPin = it.filter(Char::isDigit).take(8) }, txt.currentPin, numeric = true)
+            SecretField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, txt.newPin, numeric = true)
+            SecretField(newPin2, { newPin2 = it.filter(Char::isDigit).take(8) }, txt.repeatNewPin, numeric = true)
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = C.card2, contentColor = C.text),
                 onClick = {
                     if (newPin != newPin2) {
-                        pinMsg = false to "Os PINs novos não conferem"
+                        pinMsg = false to txt.newPinsDontMatch
                         return@Button
                     }
                     scope.launch {
                         pinMsg = when (val r = repo.changePin(curPin, newPin)) {
-                            Repository.Outcome.Ok -> { curPin = ""; newPin = ""; newPin2 = ""; true to "PIN trocado" }
-                            is Repository.Outcome.WrongPin -> false to "PIN atual incorreto. Restam ${r.remaining} tentativas."
+                            Repository.Outcome.Ok -> { curPin = ""; newPin = ""; newPin2 = ""; true to txt.pinChanged }
+                            is Repository.Outcome.WrongPin -> false to txt.wrongCurrentPin(r.remaining)
                             is Repository.Outcome.Error -> false to r.message
                             Repository.Outcome.Wiped -> null
                         }
                     }
                 },
-            ) { Text("Trocar PIN") }
+            ) { Text(txt.changePin) }
             pinMsg?.let { (ok, m) -> Text(m, color = if (ok) C.ok else C.bad, fontSize = 14.sp) }
 
-            Section("Segurança")
+            Section(txt.security)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { repo.lock(); onClose() }) { Text("Bloquear agora", color = C.text) }
+                OutlinedButton(onClick = { repo.lock(); onClose() }) { Text(txt.lockNow, color = C.text) }
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = if (confirmReset) C.bad else C.card2, contentColor = C.text),
                     onClick = {
@@ -215,32 +216,31 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                             confirmReset = true
                         }
                     },
-                ) { Text(if (confirmReset) "Toque de novo para apagar tudo" else "Apagar tudo") }
+                ) { Text(if (confirmReset) txt.tapAgainToErase else txt.eraseAll) }
             }
-            Hint("10 PINs errados seguidos também apagam a chave de pareamento, o histórico e os ajustes.")
+            Hint(txt.wipeHint)
 
-            Section("Créditos")
+            Section(txt.credits)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Mascot(Modifier.width(72.dp), seed = 99, reserveTop = false)
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text("Banditboard ${BuildConfig.VERSION_NAME}", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
-                    Text("Criado por Vinícius Pires da Silva", color = C.clawd, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(txt.createdBy, color = C.clawd, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
             Spacer(Modifier.height(10.dp))
             Credit(
-                "Mascote",
-                if (prefs.mascot() == Species.CLAWD) "Clawd é o mascote do Claude Code, da Anthropic" else "Racco, o guaxinim do Banditboard",
+                txt.mascot,
+                if (prefs.mascot() == Species.CLAWD) txt.mascotClawd else txt.mascotRacco,
             )
             if (prefs.mascot() == Species.RACCOON) Text(
-                "Por que um guaxinim? Porque ele vive espiando e se esgueirando, sempre de olho nos seus limites. " +
-                    "E é uma pequena homenagem à minha linda futura esposa, que se identifica com guaxinins: apesar dela dizer que é um, ela não é.",
+                txt.whyRaccoon,
                 color = C.text, fontSize = 13.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
             )
-            Credit("Dados", "Claude Code no PC, status.claude.com e o feed Olshansk/rss-feeds")
-            Credit("Feedback", Nudge.EMAIL, C.clawd) { sendFeedback(context) }
-            Hint("Projeto pessoal de fã, sem vínculo com a Anthropic.")
+            Credit(txt.data, txt.dataSources)
+            Credit(txt.feedback, Nudge.EMAIL, C.clawd) { sendFeedback(context) }
+            Hint(txt.fanProject)
             Spacer(Modifier.height(28.dp))
         }
     }

@@ -23,7 +23,7 @@ object StatusApi {
             MODELS.forEach { m -> if (text.contains(m.lowercase())) down += m }
             val last = inc.optJSONArray("incident_updates")?.optJSONObject(0)
             list += Incident(
-                inc.str("name") ?: "Incidente",
+                inc.str("name") ?: txt.incident,
                 inc.str("impact") ?: "",
                 inc.str("status") ?: "",
                 inc.str("shortlink"),

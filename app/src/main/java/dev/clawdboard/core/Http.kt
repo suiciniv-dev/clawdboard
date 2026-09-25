@@ -39,8 +39,8 @@ fun httpRequest(
 }
 
 fun netMessage(e: Throwable): String = when (e) {
-    is UnknownHostException -> "Sem internet (DNS falhou)"
-    is SocketTimeoutException -> "Tempo esgotado na conexão"
-    is SSLException -> "Falha TLS: ${e.message ?: ""}".trim()
+    is UnknownHostException -> txt.noInternet
+    is SocketTimeoutException -> txt.timeout
+    is SSLException -> txt.tlsFailed(e.message ?: "").trim()
     else -> "${e.javaClass.simpleName}: ${e.message ?: ""}".trim()
 }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,8 @@ import dev.clawdboard.core.Music
 import dev.clawdboard.core.Repository
 import dev.clawdboard.core.Sample
 import dev.clawdboard.core.ScreenMode
+import dev.clawdboard.core.resolved
+import dev.clawdboard.core.txt
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlinx.coroutines.delay
@@ -101,22 +104,24 @@ fun ClawdboardApp(repo: Repository) {
                     }
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                when {
-                    !st.provisioned -> SetupScreen(repo, st)
-                    !st.unlocked -> LockScreen(repo, st)
-                    overlay == Overlay.SETTINGS -> Zoomed(prefs.zoom) {
-                        SettingsScreen(repo, st, prefs, onClose = { overlay = Overlay.NONE })
-                    }
-                    overlay == Overlay.PIN -> {
-                        BackHandler { overlay = Overlay.NONE }
-                        PinGate(repo, st, onOk = { overlay = Overlay.SETTINGS }, onCancel = { overlay = Overlay.NONE })
-                    }
-                    else -> Zoomed(prefs.zoom) {
-                        Box(Modifier.fillMaxSize()) {
-                            Shifted(prefs.pixelShift) {
-                                Screens(st, prefs.mode, prefs.dwellSec, history, repo.music.takeIf { prefs.music }, dancing, onSettings = { overlay = Overlay.PIN })
+                key(prefs.language.resolved()) {
+                    when {
+                        !st.provisioned -> SetupScreen(repo, st)
+                        !st.unlocked -> LockScreen(repo, st)
+                        overlay == Overlay.SETTINGS -> Zoomed(prefs.zoom) {
+                            SettingsScreen(repo, st, prefs, onClose = { overlay = Overlay.NONE })
+                        }
+                        overlay == Overlay.PIN -> {
+                            BackHandler { overlay = Overlay.NONE }
+                            PinGate(repo, st, onOk = { overlay = Overlay.SETTINGS }, onCancel = { overlay = Overlay.NONE })
+                        }
+                        else -> Zoomed(prefs.zoom) {
+                            Box(Modifier.fillMaxSize()) {
+                                Shifted(prefs.pixelShift) {
+                                    Screens(st, prefs.mode, prefs.dwellSec, history, repo.music.takeIf { prefs.music }, dancing, onSettings = { overlay = Overlay.PIN })
+                                }
+                                FeedbackCard(repo, Modifier.align(Alignment.BottomCenter))
                             }
-                            FeedbackCard(repo, Modifier.align(Alignment.BottomCenter))
                         }
                     }
                 }
@@ -233,7 +238,7 @@ private fun Screens(
                 .clickable(onClick = onSettings),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Settings, contentDescription = "Configurações", tint = C.dim.copy(alpha = 0.7f), modifier = Modifier.size(22.dp))
+            Icon(Icons.Filled.Settings, contentDescription = txt.settings, tint = C.dim.copy(alpha = 0.7f), modifier = Modifier.size(22.dp))
         }
     }
 }

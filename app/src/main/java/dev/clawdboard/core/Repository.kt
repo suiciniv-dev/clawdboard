@@ -99,7 +99,7 @@ class Repository(private val app: Context) {
                     factoryResetInternal()
                     Outcome.Wiped
                 }
-                Vault.Unlock.NotProvisioned -> Outcome.Error("O Banditboard ainda não foi configurado")
+                Vault.Unlock.NotProvisioned -> Outcome.Error(txt.notConfigured)
                 is Vault.Unlock.Broken -> Outcome.Error(r.reason)
             }
         }
@@ -109,7 +109,7 @@ class Repository(private val app: Context) {
         Vault.pinProblem(pin)?.let { return Outcome.Error(it) }
         return withContext(Dispatchers.Default) {
             vaultLock.withLock {
-                if (vault.isProvisioned) return@withLock Outcome.Error("O Banditboard já está configurado. Faça login com o PIN.")
+                if (vault.isProvisioned) return@withLock Outcome.Error(txt.alreadyConfigured)
                 val fresh = Pairing.newKey()
                 sessionKey = vault.provision(pin, fresh)
                 pairing.remember(fresh)
@@ -121,7 +121,7 @@ class Repository(private val app: Context) {
     }
 
     suspend fun newPairKey(): Outcome {
-        val key = sessionKey ?: return Outcome.Error("Desbloqueie com o PIN primeiro")
+        val key = sessionKey ?: return Outcome.Error(txt.unlockFirst)
         return withContext(Dispatchers.Default) {
             vaultLock.withLock {
                 val fresh = Pairing.newKey()
@@ -153,7 +153,7 @@ class Repository(private val app: Context) {
                         factoryResetInternal()
                         Outcome.Wiped
                     }
-                    Vault.Unlock.NotProvisioned -> Outcome.Error("O Banditboard ainda não foi configurado")
+                    Vault.Unlock.NotProvisioned -> Outcome.Error(txt.notConfigured)
                     is Vault.Unlock.Broken -> Outcome.Error(r.reason)
                 }
             }
@@ -277,6 +277,7 @@ class Repository(private val app: Context) {
         val s = _state.value
         return JSONObject()
             .put("name", "Banditboard")
+            .put("lang", txt.code)
             .put("version", BuildConfig.VERSION_NAME)
             .put("provisioned", vault.isProvisioned)
             .put("unlocked", s.unlocked)
