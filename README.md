@@ -121,16 +121,23 @@ adb shell appops set dev.clawdboard SYSTEM_ALERT_WINDOW allow
 Atualizar por cima com um APK novo mantém token, PIN, ajustes e histórico, desde que seja assinado pela mesma chave de debug desta máquina.
 Depois da atualização o app pede o PIN uma vez.
 
-## Compilar e instalar
+## Quer testar localmente?
 
-Tudo que o build baixa fica em `D:\Android\gradle-home`. O SDK e o JDK usados são os que o Visual Studio já instalou.
+Precisa do JDK 17 e do Android SDK com a API 35 (em `ANDROID_HOME` ou no `sdk.dir` do `local.properties`). Com eles instalados:
+
+```powershell
+.\gradlew.bat testReleaseUnitTest assembleDebug
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+```
+
+`assembleDebug` gera a prévia `dev.clawdboard.preview`, que instala ao lado do app real sem tocar no token dele e aceita os dados de exemplo abaixo. `assembleRelease` gera o app normal.
+
+Na minha máquina uso os atalhos de `scripts\`, que já apontam para o Gradle em `D:\Android\gradle-home` e para o JDK que o Visual Studio instalou:
 
 ```powershell
 .\scripts\compilar.ps1
 .\scripts\instalar.ps1 -Ip 192.168.0.15   # IP do celular com ADB via Wi-Fi; sem -Ip usa o celular de teste
 ```
-
-`assembleDebug` gera a prévia `dev.clawdboard.preview`, que instala ao lado do app real sem tocar no token dele.
 
 Ferramentas de diagnóstico via ADB:
 
