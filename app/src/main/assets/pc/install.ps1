@@ -48,6 +48,6 @@ foreach ($event in 'Stop', 'SessionStart') {
 }
 [System.IO.File]::WriteAllText($settingsPath, ($settings | ConvertTo-Json -Depth 64), $utf8)
 
-Write-Host 'Clawdboard conectado ao Claude Code.' -ForegroundColor Green
+Write-Host 'Banditboard conectado ao Claude Code.' -ForegroundColor Green
 if (Test-Path $backup) { Write-Host "Backup dos seus ajustes: $backup" }
 Write-Host 'A cada resposta do Claude Code (VS Code ou terminal) o uso vai para o celular, no maximo a cada 2 minutos (__URL__).'

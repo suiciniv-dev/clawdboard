@@ -99,7 +99,7 @@ class Repository(private val app: Context) {
                     factoryResetInternal()
                     Outcome.Wiped
                 }
-                Vault.Unlock.NotProvisioned -> Outcome.Error("O Clawdboard ainda não foi configurado")
+                Vault.Unlock.NotProvisioned -> Outcome.Error("O Banditboard ainda não foi configurado")
                 is Vault.Unlock.Broken -> Outcome.Error(r.reason)
             }
         }
@@ -109,7 +109,7 @@ class Repository(private val app: Context) {
         Vault.pinProblem(pin)?.let { return Outcome.Error(it) }
         return withContext(Dispatchers.Default) {
             vaultLock.withLock {
-                if (vault.isProvisioned) return@withLock Outcome.Error("O Clawdboard já está configurado. Faça login com o PIN.")
+                if (vault.isProvisioned) return@withLock Outcome.Error("O Banditboard já está configurado. Faça login com o PIN.")
                 val fresh = Pairing.newKey()
                 sessionKey = vault.provision(pin, fresh)
                 pairing.remember(fresh)
@@ -153,7 +153,7 @@ class Repository(private val app: Context) {
                         factoryResetInternal()
                         Outcome.Wiped
                     }
-                    Vault.Unlock.NotProvisioned -> Outcome.Error("O Clawdboard ainda não foi configurado")
+                    Vault.Unlock.NotProvisioned -> Outcome.Error("O Banditboard ainda não foi configurado")
                     is Vault.Unlock.Broken -> Outcome.Error(r.reason)
                 }
             }
@@ -276,7 +276,7 @@ class Repository(private val app: Context) {
     fun infoJson(): JSONObject {
         val s = _state.value
         return JSONObject()
-            .put("name", "Clawdboard")
+            .put("name", "Banditboard")
             .put("version", BuildConfig.VERSION_NAME)
             .put("provisioned", vault.isProvisioned)
             .put("unlocked", s.unlocked)

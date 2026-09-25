@@ -44,7 +44,7 @@ import dev.clawdboard.core.Repository
 import kotlinx.coroutines.delay
 
 fun sendFeedback(context: Context) {
-    val uri = Uri.parse("mailto:${Nudge.EMAIL}?subject=" + Uri.encode("Clawdboard ${BuildConfig.VERSION_NAME}"))
+    val uri = Uri.parse("mailto:${Nudge.EMAIL}?subject=" + Uri.encode("Banditboard ${BuildConfig.VERSION_NAME}"))
     runCatching { context.startActivity(Intent(Intent.ACTION_SENDTO, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
 
@@ -85,7 +85,7 @@ fun FeedbackCard(repo: Repository, modifier: Modifier = Modifier) {
             Mascot(Modifier.width(60.dp), seed = 5, reserveTop = false)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text("Está gostando do Clawdboard?", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+                Text("Está gostando do Banditboard?", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
                 Text("Feedbacks, sugestões ou quer apoiar? Escreve para ${Nudge.EMAIL}", color = C.muted, fontSize = 14.sp)
                 Spacer(Modifier.height(8.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

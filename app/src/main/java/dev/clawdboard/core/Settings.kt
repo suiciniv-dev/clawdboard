@@ -12,7 +12,7 @@ enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto A
 enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
 enum class Orientation(val label: String) { LANDSCAPE("Paisagem"), PORTRAIT("Retrato"), AUTO("Automática") }
 enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"), CROWNS("Coroas"), XMAS("Natal") }
-enum class Species(val label: String) { RACCOON("Guaxinim"), CLAWD("Clawd") }
+enum class Species(val label: String) { RACCOON("Racco"), CLAWD("Clawd") }
 enum class Tint(val label: String) { NATURAL("Natural"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
 
 data class Prefs(

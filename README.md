@@ -1,4 +1,4 @@
-# 🦝 Clawdboard
+# 🦝 Banditboard
 
 **Turn an old Android phone into a Claude Code usage monitor.**
 
@@ -7,24 +7,24 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/suiciniv-dev/clawdboard?label=download%20APK&color=d77757" alt="Download APK"></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/suiciniv-dev/banditboard?label=download%20APK&color=d77757" alt="Download APK"></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white" alt="Android 8.0+">
   <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin and Jetpack Compose">
-  <a href="../../stargazers"><img src="https://img.shields.io/github/stars/suiciniv-dev/clawdboard?style=flat" alt="GitHub stars"></a>
+  <a href="../../stargazers"><img src="https://img.shields.io/github/stars/suiciniv-dev/banditboard?style=flat" alt="GitHub stars"></a>
 </p>
 
 <p align="center"><b><a href="../../releases/latest">Download the latest APK</a></b> · <a href="../../releases">All releases</a></p>
 
-## What is Clawdboard?
+## What is Banditboard?
 
-Clawdboard is an always-on desk display for your Claude usage, made for that old Android phone sitting in a drawer.
+Banditboard is an always-on desk display for your Claude usage, made for that old Android phone sitting in a drawer.
 It shows how much of the 5-hour session and of the week you have used, when each one resets and whether any model has
-an open incident. The models appear as pixel-art raccoons that sleep, sweat, burst at 100% and dance when music plays.
+an open incident. Each model is Racco, a pixel-art raccoon who sleeps, sweats, bursts at 100% and dances when music plays.
 
 ## ✨ Features
 
 - 📊 **Usage at a glance**: 5-hour session and 7-day week, with a countdown and the local time each one resets
-- 🦝 **Animated raccoons**: Haiku, Sonnet, Opus and Fable blink, wave, sleep when the session is empty, sweat from 85%, turn red from 90% and burst at 100%
+- 🦝 **Racco, the raccoon**: one per model (Haiku, Sonnet, Opus and Fable). They blink, wave, sleep when the session is empty, sweat from 85%, turn red from 90% and burst at 100%
 - 🔌 **No token on the phone**: the numbers come from Claude Code's own `/usage` on your PC, over the local network
 - 🎵 **Music mode**: whatever plays on the phone (Spotify, YouTube Music or any player), with cover, controls and volume, while the raccoons dance on every screen
 - 📈 **7-day history**: one sample every 30 minutes
@@ -44,7 +44,7 @@ The app's interface is in Brazilian Portuguese.
 | <img src="prints/1.6.0/01-painel.png" alt="Dashboard"> | <img src="prints/1.6.0/02-mascotes.png" alt="Mascots screen"> | <img src="prints/1.6.0/03-relogio-retrato.png" alt="Desk clock in portrait"> |
 | Dashboard | Mascots | Desk clock |
 
-### Raccoon reactions
+### Racco reactions
 
 | | | |
 |---|---|---|
@@ -67,12 +67,12 @@ The app's interface is in Brazilian Portuguese.
 | <img src="prints/1.6.0/12-arco-iris.png" alt="Rainbow colors"> | <img src="prints/1.6.0/13-natal.png" alt="Christmas skin"> | <img src="prints/1.6.0/14-ajustes.png" alt="Mascot settings"> |
 | One color per model | Christmas skin | Settings, at 150% zoom |
 
-### Web dashboard and AMOLED
+### Web dashboard, AMOLED and credits
 
-| | |
-|---|---|
-| <img src="prints/1.6.0/15-painel-pc.png" alt="Web dashboard on a PC"> | <img src="prints/1.6.0/16-amoled.png" alt="Dashboard in AMOLED black"> |
-| Web dashboard in the PC browser | AMOLED black |
+| | | |
+|---|---|---|
+| <img src="prints/1.7.0/15-painel-pc.png" alt="Web dashboard on a PC"> | <img src="prints/1.6.0/16-amoled.png" alt="Dashboard in AMOLED black"> | <img src="prints/1.7.0/17-creditos.png" alt="Credits with Racco"> |
+| Web dashboard in the PC browser | AMOLED black | Credits |
 
 ## 🚀 Quick Start
 
@@ -93,7 +93,7 @@ The app's interface is in Brazilian Portuguese.
 - 10 wrong PINs in a row wipe the pairing key, the history and the settings.
 - The web dashboard only runs on the local network, asks for the same PIN and only answers when the Host is an IP address, `localhost` or a `.local` name, which blocks DNS rebinding. Logging in on the dashboard also unlocks the phone screen.
 - The installer keeps a backup of your Claude Code settings in `settings.json.antes-do-clawdboard`, adds two hooks (`Stop` and `SessionStart`) and does not touch your status line.
-- Music mode needs notification access because Android only shows the active player to apps with that access. Clawdboard uses it to see and control the player; it does not read your notifications.
+- Music mode needs notification access because Android only shows the active player to apps with that access. Banditboard uses it to see and control the player; it does not read your notifications.
 
 ## 🔧 Technical details
 
@@ -109,7 +109,7 @@ The app's interface is in Brazilian Portuguese.
 
  ┌──────────────────┐
  │  Android phone   │ ──► status.claude.com    open incidents
- │   Clawdboard     │ ──► public RSS feed      Anthropic news
+ │   Banditboard    │ ──► public RSS feed      Anthropic news
  └──────────────────┘
           ├──► 🦝 raccoons on the phone screen
           └──► web dashboard on your local network (http://PHONE-IP:8080)
@@ -136,7 +136,7 @@ reset time passes without a new push, the phone drops it to 0% on its own.
 30 seconds. The gear in the bottom right corner opens the settings after asking for the PIN. After a reboot or an app restart
 the screen asks for the PIN again, and you can unlock it from the web dashboard. The footer shows when the last push arrived.
 
-**Screens and modes.** Dashboard, mascots (session and week on top, the four raccoons below), 7-day chart, news, desk clock and
+**Screens and modes.** Dashboard, mascots (session and week on top, the four Raccos below), 7-day chart, news, desk clock and
 music (when enabled). Screen modes: static, mascots, carousel or clock. In the carousel the music screen only shows up while
 something is playing.
 
@@ -153,13 +153,13 @@ burst and stay charred, with X eyes and smoke, marked "esgotado". Session or gen
 limit at 100% bursts only Fable. An open incident on status.claude.com that names a model turns its raccoon gray with X eyes.
 Animations can be turned off in the settings.
 
-**Music.** Settings → Música → "Tela de música", then "Liberar acesso" and allow Clawdboard. Clawdboard plays nothing itself: it reads
+**Music.** Settings → Música → "Tela de música", then "Liberar acesso" and allow Banditboard. Banditboard plays nothing itself: it reads
 and controls the player of the app that is playing, through Android's media session. The screen shows the album cover, the track,
 the icon of the app (one tap opens its player, to change playlists), the progress bar, the buttons, the app's extra buttons and the
 volume: the phone's media volume or, when the app sends the sound to another device, that device's volume. While music plays, every
 raccoon dances on every screen, the web dashboard included: sleepy ones wake up, sweaty ones dance sweating and burst ones tap a foot.
 On an APK installed through a browser or file manager, Android 13 and later may say it is a "restricted setting". In that case:
-Settings → Apps → Clawdboard → ⋮ → Allow restricted settings, and try again.
+Settings → Apps → Banditboard → ⋮ → Allow restricted settings, and try again.
 
 **Zoom and compact mode.** 90, 100, 115, 130 or 150% on the screens and in the settings; the lock and PIN screens keep the system size.
 When the shorter side of the screen drops below 380dp (high zoom or a small phone), the screens switch to a compact layout and hide
@@ -240,7 +240,7 @@ purpose: explanations go in this README. The app's text is in Brazilian Portugue
 There is no open-source license yet, so all rights are reserved. The Fredoka font is distributed under the SIL Open Font License;
 its text ships inside the APK in `assets/licenses/`.
 
-Clawdboard is a personal fan project, **not affiliated with, endorsed by or sponsored by Anthropic**. Claude and Claude Code are
-trademarks of Anthropic, PBC, and Clawd is the Claude Code mascot.
+Banditboard is a personal fan project, **not affiliated with, endorsed by or sponsored by Anthropic**. Claude and Claude Code are
+trademarks of Anthropic, PBC.
 
 Built with ❤️ by Vinícius Pires da Silva.

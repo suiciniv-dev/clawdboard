@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clawdboard</title>
+<title>Banditboard</title>
 <style>
 @font-face{font-family:Fredoka;src:url(/fredoka.ttf) format("truetype");font-weight:300 700;font-display:swap}
 :root{
@@ -144,7 +144,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 <main>
   <header>
     <span id="logo"></span>
-    <div><h1>Clawdboard</h1><div class="sub">painel do celular · uso do Claude</div></div>
+    <div><h1>Banditboard</h1><div class="sub">painel do celular · uso do Claude</div></div>
     <span class="sp"></span>
     <div class="clock"><b id="clk">--:--</b><span id="clkDate"></span></div>
     <span id="lockPill" class="pill">...</span>
@@ -533,8 +533,8 @@ function render(){
   fillSelect($("oSkin"), o.skin, st.skin);
   fillSelect($("oTint"), o.tint, st.tint);
   $("oShift").checked = st.pixelShift; $("oAuto").checked = st.autostart; $("oPanel").checked = st.panelEnabled; $("oAnim").checked = st.animations; $("oMusic").checked = st.music;
-  const mail = s.contact ? ` · <a href="mailto:${esc(s.contact)}?subject=${encodeURIComponent("Clawdboard " + s.version)}">feedback e sugestões</a>` : "";
-  $("foot").innerHTML = `Clawdboard ${esc(s.version)} · criado por Vinícius Pires da Silva${mail} · ${esc(s.panelUrl || "")}`;
+  const mail = s.contact ? ` · <a href="mailto:${esc(s.contact)}?subject=${encodeURIComponent("Banditboard " + s.version)}">feedback e sugestões</a>` : "";
+  $("foot").innerHTML = `Banditboard ${esc(s.version)} · criado por Vinícius Pires da Silva${mail} · ${esc(s.panelUrl || "")}`;
 }
 
 function setPill(unlocked){

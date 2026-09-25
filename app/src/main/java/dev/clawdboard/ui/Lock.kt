@@ -168,7 +168,7 @@ fun LockScreen(repo: Repository, st: Repository.State) {
     var msg by remember { mutableStateOf<String?>(null) }
     val remaining = 10 - st.failures
     PinPad(
-        title = "Clawdboard bloqueado",
+        title = "Banditboard bloqueado",
         subtitle = "Digite o PIN para liberar o painel",
         message = msg ?: if (st.failures > 0) "Restam $remaining tentativas antes de apagar tudo" else null,
         messageIsError = msg != null || st.failures > 0,
@@ -229,7 +229,7 @@ fun SetupScreen(repo: Repository, st: Repository.State) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Mascot(Modifier.width(150.dp), seed = 7, reserveTop = false)
                 Spacer(Modifier.height(18.dp))
-                Text("Clawdboard", color = C.text, fontSize = 38.sp, fontFamily = Fredoka, fontWeight = FontWeight.Bold)
+                Text("Banditboard", color = C.text, fontSize = 38.sp, fontFamily = Fredoka, fontWeight = FontWeight.Bold)
                 Text("uso do Claude na sua mesa", color = C.muted, fontSize = 15.sp)
             }
         }

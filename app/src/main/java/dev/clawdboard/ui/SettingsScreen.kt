@@ -170,13 +170,13 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                     Text("Acesso ao player liberado", color = C.ok, fontSize = 14.sp)
                     if (!prefs.animations) Hint("Com as animações desligadas, os mascotes não dançam.")
                 } else {
-                    Hint("Para ver o que está tocando, o Android pede acesso às notificações. O Clawdboard usa esse acesso só para ler e controlar o player; as notificações não são lidas.")
+                    Hint("Para ver o que está tocando, o Android pede acesso às notificações. O Banditboard usa esse acesso só para ler e controlar o player; as notificações não são lidas.")
                     Spacer(Modifier.height(8.dp))
                     Button(
                         colors = ButtonDefaults.buttonColors(containerColor = C.clawd, contentColor = C.bg),
                         onClick = { repo.music.openAccess(context) },
                     ) { Text("Liberar acesso") }
-                    Hint("Se o Android avisar que é uma configuração restrita: Configurações → Apps → Clawdboard → ⋮ → Permitir configurações restritas, e tente de novo.")
+                    Hint("Se o Android avisar que é uma configuração restrita: Configurações → Apps → Banditboard → ⋮ → Permitir configurações restritas, e tente de novo.")
                 }
             }
 
@@ -224,14 +224,14 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                 Mascot(Modifier.width(72.dp), seed = 99, reserveTop = false)
                 Spacer(Modifier.width(16.dp))
                 Column {
-                    Text("Clawdboard ${BuildConfig.VERSION_NAME}", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
+                    Text("Banditboard ${BuildConfig.VERSION_NAME}", color = C.text, fontSize = 18.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
                     Text("Criado por Vinícius Pires da Silva", color = C.clawd, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
             Spacer(Modifier.height(10.dp))
             Credit(
                 "Mascote",
-                if (prefs.mascot() == Species.CLAWD) "Clawd é o mascote do Claude Code, da Anthropic" else "Guaxinim em pixel art, feito para o Clawdboard",
+                if (prefs.mascot() == Species.CLAWD) "Clawd é o mascote do Claude Code, da Anthropic" else "Racco, o guaxinim do Banditboard",
             )
             Credit("Dados", "Claude Code no PC, status.claude.com e o feed Olshansk/rss-feeds")
             Credit("Feedback", Nudge.EMAIL, C.clawd) { sendFeedback(context) }

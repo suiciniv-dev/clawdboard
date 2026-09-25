@@ -186,7 +186,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         if (method == "GET" && path == "/fredoka.ttf") return Resp(200, "font/ttf", font)
         if (method == "GET" && path == "/pc/install.ps1") {
             val script = repo.installerFor(host, param(query, "k"))
-                ?: return text(403, "Write-Host 'Chave do Clawdboard inválida. Copie o comando de novo no painel.' -ForegroundColor Red")
+                ?: return text(403, "Write-Host 'Chave do Banditboard inválida. Copie o comando de novo no painel.' -ForegroundColor Red")
             return text(200, script)
         }
         if (!path.startsWith("/api/")) return json(404, err("Não encontrado"))
