@@ -11,7 +11,9 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
 import android.graphics.drawable.Icon
+import android.media.AudioManager
 import android.media.MediaMetadata
+import android.media.VolumeProvider
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
@@ -56,6 +58,8 @@ data class Track(
 
 data class MediaApp(val pkg: String, val label: String, val icon: Bitmap?)
 
+data class Volume(val level: Int, val max: Int)
+
 fun livePosition(position: Long, at: Long, speed: Float, playing: Boolean, duration: Long, now: Long): Long {
     val p = if (playing && at > 0 && position >= 0) position + ((now - at) * speed).toLong() else position
     val floor = p.coerceAtLeast(0)
@@ -75,6 +79,8 @@ class Music(private val app: Context) {
     private val main = Handler(Looper.getMainLooper())
     private val sessions = app.getSystemService(MediaSessionManager::class.java)
     private val listener = ComponentName(app, MediaListener::class.java)
+    private val audio = app.getSystemService(AudioManager::class.java)
+    private var demoVolume = 9
 
     private val _track = MutableStateFlow<Track?>(null)
     val track: StateFlow<Track?> = _track.asStateFlow()
@@ -263,6 +269,34 @@ class Music(private val app: Context) {
             return
         }
         current?.transportControls?.seekTo(ms)
+    }
+
+    private fun remoteInfo(): MediaController.PlaybackInfo? =
+        current?.playbackInfo?.takeIf { it.playbackType == MediaController.PlaybackInfo.PLAYBACK_TYPE_REMOTE }
+
+    fun volume(): Volume? {
+        if (demo) return Volume(demoVolume, 15)
+        val remote = remoteInfo()
+        if (remote != null) {
+            if (remote.volumeControl == VolumeProvider.VOLUME_CONTROL_FIXED || remote.maxVolume <= 0) return null
+            return Volume(remote.currentVolume, remote.maxVolume)
+        }
+        if (audio.isVolumeFixed) return null
+        val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        return if (max <= 0) null else Volume(audio.getStreamVolume(AudioManager.STREAM_MUSIC), max)
+    }
+
+    fun setVolume(level: Int) {
+        if (demo) {
+            demoVolume = level.coerceIn(0, 15)
+            return
+        }
+        val c = current
+        if (c != null && remoteInfo() != null) {
+            c.setVolumeTo(level, 0)
+        } else {
+            runCatching { audio.setStreamVolume(AudioManager.STREAM_MUSIC, level, 0) }
+        }
     }
 
     fun extra(a: TrackAction) {

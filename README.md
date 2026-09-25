@@ -49,7 +49,7 @@ Painel web, aberto no navegador do PC pela rede local:
 | Modos de tela | Estático, mascotes, carrossel ou relógio de mesa: dashboard, mascotes grandes, gráfico de 7 dias, notícias da Anthropic e relógio |
 | Histórico de 7 dias | Uma amostra a cada 30 min, no armazenamento interno. Tempo com o app fechado vira buraco no gráfico |
 | Troca de token | Só escrita, testada ao vivo na API antes de salvar, sem reset |
-| Música | Opcional. Mostra capa, faixa e artista do que toca no celular (Spotify, YouTube Music ou qualquer app com player do Android), com play, pausa, anterior, próxima, barra para pular e os botões extras do app. Os mascotes dançam enquanto a música toca |
+| Música | Opcional. Mostra capa, faixa e artista do que toca no celular (Spotify, YouTube Music ou qualquer app com player do Android), com play, pausa, anterior, próxima, barra para pular, volume e os botões extras do app. Os mascotes dançam enquanto a música toca |
 
 Telas: dashboard, **mascotes** (sessão e semana em cima, os quatro Clawds grandes no rodapé com a barra de uso de cada modelo),
 gráfico de 7 dias, notícias, relógio e música (quando ligada). Todas têm layout próprio em paisagem e em retrato; no retrato o relógio empilha horas e minutos.
@@ -69,7 +69,7 @@ Sessão ou semana geral em 100% esgota os quatro; o limite próprio do Fable em 
 Música: ligue em Configurações → Música → "Tela de música". O Clawdboard não toca nada: ele lê e controla o player do app
 que está tocando, pela sessão de mídia do Android. Para isso o Android exige acesso às notificações, que você libera pelo botão
 "Liberar acesso"; o app não lê as notificações, só usa esse acesso para enxergar o player. A tela mostra a capa do álbum, o nome
-e o ícone do app que está tocando (um toque abre o app direto no player, para trocar de playlist), a barra de progresso e os botões.
+e o ícone do app que está tocando (um toque abre o app direto no player, para trocar de playlist), a barra de progresso, os botões e o volume (o de mídia do celular ou, se o app estiver mandando o som para outro aparelho, o desse aparelho).
 Enquanto a música toca, todos os mascotes dançam em todas as telas, no painel web também: com sono acordam e dançam, suados dançam
 suando e esgotados ficam parados batendo o pé. Pausou, eles param. No carrossel a tela de música só entra quando há algo tocando.
 

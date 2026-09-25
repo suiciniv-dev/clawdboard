@@ -30,8 +30,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +45,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -65,6 +68,7 @@ import dev.clawdboard.core.Music
 import dev.clawdboard.core.NOTE_PIXELS
 import dev.clawdboard.core.Repository
 import dev.clawdboard.core.Track
+import kotlin.math.roundToInt
 
 private enum class Glyph { PLAY, PAUSE, NEXT, PREV }
 
@@ -97,7 +101,11 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
             Cover(t, Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
             Spacer(Modifier.width(if (compact) 22.dp else 32.dp))
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
-                AppChip(t.appIcon, t.app, "abrir") { music.open(context) }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    AppChip(t.appIcon, t.app, "abrir") { music.open(context) }
+                    Spacer(Modifier.width(20.dp))
+                    VolumeBar(music, Modifier.weight(1f))
+                }
                 TrackText(t, compact, TextAlign.Start)
                 Column {
                     Progress(t, music::seek)
@@ -117,6 +125,7 @@ fun MusicPage(music: Music, st: Repository.State, landscape: Boolean, compact: B
             TrackText(t, compact, TextAlign.Center)
             Progress(t, music::seek)
             Controls(t, music, compact)
+            VolumeBar(music, Modifier.widthIn(max = 360.dp).padding(top = 4.dp, bottom = 10.dp))
             MascotRow(st.status, Modifier.widthIn(max = 300.dp), usage = st.usage, clawdWidth = 48.dp, labels = false)
         }
     }
@@ -222,35 +231,121 @@ private fun Progress(t: Track, onSeek: (Long) -> Unit) {
     val pos = remember(LocalNow.current, t) { t.positionNow() }
     var drag by remember { mutableStateOf<Float?>(null) }
     val f = drag ?: (pos.toFloat() / t.duration).coerceIn(0f, 1f)
-    val seek = if (!t.canSeek) Modifier else Modifier
-        .pointerInput(t.duration) {
-            detectTapGestures { o -> onSeek(((o.x / size.width).coerceIn(0f, 1f) * t.duration).toLong()) }
-        }
-        .pointerInput(t.duration) {
-            detectHorizontalDragGestures(
-                onDragStart = { o -> drag = (o.x / size.width).coerceIn(0f, 1f) },
-                onDragEnd = {
-                    drag?.let { onSeek((it * t.duration).toLong()) }
-                    drag = null
-                },
-                onDragCancel = { drag = null },
-                onHorizontalDrag = { change, _ ->
-                    change.consume()
-                    drag = (change.position.x / size.width).coerceIn(0f, 1f)
-                },
-            )
-        }
     Column(Modifier.fillMaxWidth()) {
-        BoxWithConstraints(Modifier.fillMaxWidth().height(26.dp).then(seek), contentAlignment = Alignment.CenterStart) {
-            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(C.track)) {
-                if (f > 0f) Box(Modifier.fillMaxHeight().fillMaxWidth(f).clip(RoundedCornerShape(50)).background(C.clawd))
-            }
-            if (t.canSeek) Box(Modifier.offset(x = (maxWidth - 14.dp) * f).size(14.dp).clip(CircleShape).background(C.text))
-        }
+        DragBar(
+            f, t.canSeek, C.clawd, 8.dp, 14.dp,
+            onDrag = { drag = it },
+            onRelease = {
+                onSeek((it * t.duration).toLong())
+                drag = null
+            },
+        )
         Row(Modifier.fillMaxWidth()) {
             Text(fmtTrack(drag?.let { (it * t.duration).toLong() } ?: pos), color = C.muted, fontSize = 13.sp)
             Spacer(Modifier.weight(1f))
             Text(fmtTrack(t.duration), color = C.dim, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun VolumeBar(music: Music, modifier: Modifier) {
+    var version by remember { mutableIntStateOf(0) }
+    val v = remember(LocalNow.current, version) { music.volume() } ?: return
+    var drag by remember { mutableStateOf<Float?>(null) }
+    var sent by remember { mutableIntStateOf(-1) }
+    fun send(f: Float) {
+        val level = (f * v.max).roundToInt()
+        if (level != sent) {
+            sent = level
+            music.setVolume(level)
+        }
+    }
+    val f = drag ?: (v.level.toFloat() / v.max).coerceIn(0f, 1f)
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        SpeakerIcon(f, C.muted, Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        DragBar(
+            f, true, C.muted, 6.dp, 12.dp,
+            onDrag = {
+                drag = it
+                send(it)
+            },
+            onRelease = {
+                send(it)
+                drag = null
+                sent = -1
+                version++
+            },
+            modifier = Modifier.weight(1f).semantics { contentDescription = "Volume" },
+        )
+    }
+}
+
+@Composable
+private fun DragBar(
+    f: Float,
+    enabled: Boolean,
+    color: Color,
+    barHeight: Dp,
+    thumb: Dp,
+    onDrag: (Float) -> Unit,
+    onRelease: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val drag by rememberUpdatedState(onDrag)
+    val release by rememberUpdatedState(onRelease)
+    val gestures = if (!enabled) Modifier else Modifier
+        .pointerInput(Unit) {
+            detectTapGestures { o -> release((o.x / size.width).coerceIn(0f, 1f)) }
+        }
+        .pointerInput(Unit) {
+            var last = 0f
+            detectHorizontalDragGestures(
+                onDragStart = { o ->
+                    last = (o.x / size.width).coerceIn(0f, 1f)
+                    drag(last)
+                },
+                onDragEnd = { release(last) },
+                onDragCancel = { release(last) },
+                onHorizontalDrag = { change, _ ->
+                    change.consume()
+                    last = (change.position.x / size.width).coerceIn(0f, 1f)
+                    drag(last)
+                },
+            )
+        }
+    BoxWithConstraints(modifier.fillMaxWidth().height(thumb + 12.dp).then(gestures), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.fillMaxWidth().height(barHeight).clip(RoundedCornerShape(50)).background(C.track)) {
+            if (f > 0f) Box(Modifier.fillMaxHeight().fillMaxWidth(f).clip(RoundedCornerShape(50)).background(color))
+        }
+        if (enabled) Box(Modifier.offset(x = (maxWidth - thumb) * f).size(thumb).clip(CircleShape).background(C.text))
+    }
+}
+
+@Composable
+private fun SpeakerIcon(f: Float, color: Color, modifier: Modifier) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val cone = Path().apply {
+            moveTo(w * 0.08f, h * 0.36f)
+            lineTo(w * 0.26f, h * 0.36f)
+            lineTo(w * 0.48f, h * 0.16f)
+            lineTo(w * 0.48f, h * 0.84f)
+            lineTo(w * 0.26f, h * 0.64f)
+            lineTo(w * 0.08f, h * 0.64f)
+            close()
+        }
+        drawPath(cone, color)
+        val line = w * 0.09f
+        if (f <= 0f) {
+            drawLine(color, Offset(w * 0.64f, h * 0.38f), Offset(w * 0.88f, h * 0.62f), line, StrokeCap.Round)
+            drawLine(color, Offset(w * 0.64f, h * 0.62f), Offset(w * 0.88f, h * 0.38f), line, StrokeCap.Round)
+        } else {
+            val arc = Stroke(width = line, cap = StrokeCap.Round)
+            drawArc(color, -45f, 90f, false, Offset(w * 0.3f, h * 0.5f - w * 0.2f), Size(w * 0.4f, w * 0.4f), style = arc)
+            if (f > 0.5f) drawArc(color, -50f, 100f, false, Offset(w * 0.12f, h * 0.5f - w * 0.38f), Size(w * 0.76f, w * 0.76f), style = arc)
         }
     }
 }
