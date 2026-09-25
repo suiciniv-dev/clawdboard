@@ -91,10 +91,12 @@ contra marcas na tela AMOLED, abertura automática no boot e exibição por cima
 ## Primeira configuração
 
 1. No PC, rode `claude setup-token` e copie o token `sk-ant-oat...`. Ele vale um ano.
-2. Abra `http://10.0.0.132:8080` no navegador do PC.
+2. Abra no navegador do PC o endereço que aparece na tela do celular, algo como `http://192.168.0.15:8080`. Cada celular recebe o próprio IP do roteador, e a porta é a primeira livre entre 8080 e 8089. O PC e o celular precisam estar no mesmo Wi-Fi.
 3. Crie um PIN de 4 a 8 dígitos e cole o token. O app testa o token na API antes de salvar.
 
 Também dá para configurar direto no celular, pelo link "Prefiro configurar aqui no celular".
+
+Se o roteador reiniciar, o celular pode ganhar outro IP; a tela e o rodapé do painel sempre mostram o endereço atual. Para ele não mudar, reserve um IP fixo para o celular nas configurações de DHCP do roteador.
 
 ## Uso no celular
 
@@ -125,7 +127,7 @@ Tudo que o build baixa fica em `D:\Android\gradle-home`. O SDK e o JDK usados s�
 
 ```powershell
 .\scripts\compilar.ps1
-.\scripts\instalar.ps1            # usa 10.0.0.132:5555
+.\scripts\instalar.ps1 -Ip 192.168.0.15   # IP do celular com ADB via Wi-Fi; sem -Ip usa o celular de teste
 ```
 
 `assembleDebug` gera a prévia `dev.clawdboard.preview`, que instala ao lado do app real sem tocar no token dele.
