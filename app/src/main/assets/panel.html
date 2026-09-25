@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clawdboard</title>
+<style>
+@font-face{font-family:Fredoka;src:url(/fredoka.ttf) format("truetype");font-weight:300 700;font-display:swap}
+:root{
+  --bg:#16130f; --card:#1f1a14; --card2:#262019; --line:#383024; --track:#2b2419; --text:#ece3d6; --muted:#a89a86; --dim:#7d715f;
+  --clawd:#d77757; --ok:#8fb573; --warn:#f0a83c; --bad:#e5604d; --lav:#b9a6f2; --f:Fredoka,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg) radial-gradient(ellipse at 50% 110%, rgba(217,119,87,.14), transparent 60%) fixed;color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:22px 18px 56px}
+a{color:inherit}
+header{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+header h1{font:600 30px/1 var(--f);margin:0;letter-spacing:.2px}
+header .sub{color:var(--muted);font-size:13px;margin-top:4px}
+#logo svg{width:56px;height:auto;display:block}
+.sp{flex:1}
+.clock{text-align:right;line-height:1.05}
+.clock b{font:600 32px var(--f)}
+.clock span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.pill{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.on{color:var(--ok);border-color:#2f4d36}
+.pill.off{color:var(--warn);border-color:#4d4128}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.gap{margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.card h2{font:600 18px var(--f);margin:0 0 12px;color:var(--clawd)}
+.card h2 small{font:400 13px system-ui,sans-serif;color:var(--dim);margin-left:6px}
+.win h2{color:var(--text);font-size:22px}
+.win .mid{display:flex;align-items:flex-end;gap:12px;margin:2px 0 16px}
+.big{font:700 92px/.86 var(--f)}
+.reset{margin-left:auto;text-align:right;padding-bottom:4px}
+.reset .num{font:500 32px/1.1 var(--f);display:block}
+.bar{height:16px;border-radius:99px;background:var(--track);overflow:hidden}
+.bar>i,.mbar>i{display:block;height:100%;border-radius:99px;transition:width .8s}
+.chips{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;color:var(--muted)}
+.chips i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .small{font-size:13px}
+.mascots{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:end;padding:6px 0 4px}
+.mascot{text-align:center}
+.mascot .pct{font:600 22px var(--f)}
+.mbar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;width:62%;margin:6px auto 14px}
+.mascot svg{width:min(150px,88%);height:auto;display:block;margin:0 auto}
+.mascot .nm{font:500 19px var(--f);margin-top:10px}
+.mascot .st{font-size:12px;color:var(--bad);min-height:1.5em}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:4px;border-radius:9px;vertical-align:middle;margin-right:6px}
+.allok{display:flex;align-items:center;gap:10px;font:500 19px var(--f);color:var(--ok);margin:4px 0 8px}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.inc{padding:10px 0;border-top:1px solid var(--line)}
+.inc:first-child{border-top:0;padding-top:0}
+.inc .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.imp{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:99px;border:1px solid}
+.imp.minor{color:var(--warn);border-color:#4d4128}
+.imp.major,.imp.critical{color:var(--bad);border-color:#5a2a22}
+.imp.none{color:var(--muted);border-color:var(--line)}
+.inc .nm{font:500 17px var(--f);margin:6px 0 4px}
+.inc .nm a{text-decoration:none}
+.inc .nm a:hover{text-decoration:underline}
+.inc .upd{color:var(--muted);font-size:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news{display:flex;gap:14px;padding:9px 0;border-top:1px solid var(--line);text-decoration:none}
+.news:first-child{border-top:0;padding-top:0}
+.news .nd{color:var(--clawd);font-size:13px;min-width:48px;padding-top:2px}
+.news .nt{font-size:15px}
+.news .nt small{display:block;color:var(--dim);font-size:12px}
+.news:hover .nt{text-decoration:underline}
+svg.chart{width:100%;height:auto;display:block}
+form{display:grid;gap:10px}
+label{display:grid;gap:5px;font-size:13px;color:var(--muted)}
+input,select{font:inherit;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
+input:focus,select:focus{outline:2px solid var(--clawd);outline-offset:1px}
+.check{display:flex;align-items:center;gap:10px;color:var(--text);font-size:14px}
+.check input{width:18px;height:18px;accent-color:var(--clawd)}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:var(--clawd);color:#111}
+button.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+button.danger{background:#3a1d18;color:#ffb3a6;border:1px solid #5a2a22}
+button:disabled{opacity:.55;cursor:wait}
+.msg{font-size:13px;min-height:1.2em}
+.msg.ok{color:var(--ok)} .msg.err{color:var(--bad)}
+.center{max-width:420px;margin:40px auto}
+code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row{display:flex;align-items:flex-end;gap:10px}
+.hidden{display:none!important}
+#foot a{color:var(--clawd)}
+.cl .lid{opacity:0;animation:blink 6s step-end infinite;animation-delay:var(--d)}
+.cl .eyes{animation:look 11s step-end infinite;animation-delay:var(--d)}
+.cl .la{animation:legA 9s step-end infinite;animation-delay:var(--d)}
+.cl .lb{animation:legB 9s step-end infinite;animation-delay:var(--d)}
+.cl .arm{animation:wave 13s step-end infinite;animation-delay:var(--d)}
+.cl .bod{animation:crouch 10s step-end infinite;animation-delay:var(--d)}
+.cl .drop{animation:drip 2.2s step-end infinite;animation-delay:var(--d)}
+.cl .z{animation:zz 2.9s step-end infinite;animation-delay:var(--d)}
+.cl .smoke{animation:puff 2.6s step-end infinite;animation-delay:var(--d)}
+.cl.hot{animation:throb .76s ease-in-out infinite}
+.cl.shake .all{animation:shake 1.2s step-end infinite}
+.cl.nolook .eyes,.cl.sleepy .la,.cl.sleepy .lb,.cl.sleepy .arm,.cl.dead .bod,.cl.dead .la,.cl.dead .lb,.cl.dead .arm{animation:none}
+.cl.sleepy .bod{animation:breathe 2.9s step-end infinite;animation-delay:var(--d)}
+.still .cl,.still .cl *{animation:none!important}
+@keyframes blink{0%{opacity:0}96%{opacity:1}98%{opacity:0}}
+@keyframes look{0%{transform:none}70%{transform:translateX(var(--lx))}80%{transform:none}}
+@keyframes legA{0%{transform:none}40%{transform:translateY(-1px)}42%{transform:none}44%{transform:translateY(-1px)}46%{transform:none}}
+@keyframes legB{0%{transform:none}42%{transform:translateY(-1px)}44%{transform:none}46%{transform:translateY(-1px)}48%{transform:none}}
+@keyframes wave{0%{transform:none}60%{transform:translateY(-1px)}62%{transform:none}64%{transform:translateY(-1px)}66%{transform:none}68%{transform:translateY(-1px)}70%{transform:none}}
+@keyframes crouch{0%{transform:none}20%{transform:translateY(1px)}21.5%{transform:none}23%{transform:translateY(1px)}24.5%{transform:none}}
+@keyframes breathe{0%{transform:none}45%{transform:translateY(1px)}70%{transform:none}}
+@keyframes zz{0%{opacity:1}70%{opacity:0}}
+@keyframes drip{0%{transform:none;opacity:1}15%{transform:translateY(1px)}30%{transform:translateY(2px)}45%{transform:translateY(3px)}60%{opacity:0}}
+@keyframes puff{0%{transform:none;opacity:.8}25%{transform:translateY(-1px)}50%{transform:translateY(-2px);opacity:.6}75%{transform:translateY(-3px);opacity:.4}90%{opacity:0}}
+@keyframes throb{50%{filter:brightness(1.22)}}
+@keyframes shake{0%{transform:translateX(.5px)}6%{transform:translateX(-.5px)}12%{transform:translateX(.5px)}18%{transform:translateX(-.5px)}24%{transform:none}}
+@media (prefers-reduced-motion:reduce){.cl,.cl *{animation:none!important}}
+@media (max-width:620px){.big{font-size:66px}.mascots{grid-template-columns:repeat(2,1fr);row-gap:22px}.two{grid-template-columns:1fr}.clock{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span id="logo"></span>
+    <div><h1>Clawdboard</h1><div class="sub">painel do celular · uso do Claude</div></div>
+    <span class="sp"></span>
+    <div class="clock"><b id="clk">--:--</b><span id="clkDate"></span></div>
+    <span id="lockPill" class="pill">...</span>
+    <button id="logoutBtn" class="ghost hidden" type="button">Sair</button>
+  </header>
+
+  <section id="vSetup" class="hidden center card">
+    <h2>Primeira configuração</h2>
+    <p class="muted small">No PC, rode <code>claude setup-token</code>, faça login e copie o token gerado (começa com <code>sk-ant-oat</code>). Ele vale um ano.</p>
+    <form id="fSetup">
+      <label>PIN do aparelho (4 a 8 dígitos)<input id="sPin" inputmode="numeric" type="password" autocomplete="new-password" required></label>
+      <label>Repita o PIN<input id="sPin2" inputmode="numeric" type="password" autocomplete="new-password" required></label>
+      <label>Token OAuth<input id="sTok" type="password" autocomplete="off" spellcheck="false" required></label>
+      <button type="submit">Verificar e salvar</button>
+      <div id="sMsg" class="msg"></div>
+    </form>
+    <p class="dim small">O token é cifrado com AES-256-GCM usando uma chave derivada do PIN e depois protegido pelo Keystore do Android. O PIN nunca é salvo. 10 PINs errados apagam tudo.</p>
+  </section>
+
+  <section id="vLogin" class="hidden center card">
+    <h2>Entrar</h2>
+    <p class="muted small">Use o PIN do aparelho. Entrar aqui também desbloqueia a tela do celular.</p>
+    <form id="fLogin">
+      <label>PIN<input id="lPin" inputmode="numeric" type="password" autocomplete="current-password" required autofocus></label>
+      <button type="submit">Entrar</button>
+      <div id="lMsg" class="msg"></div>
+    </form>
+  </section>
+
+  <section id="vDash" class="hidden">
+    <div class="grid">
+      <div class="card win" id="c5"></div>
+      <div class="card win" id="c7"></div>
+    </div>
+
+    <div class="card gap">
+      <h2>Modelos</h2>
+      <div class="mascots" id="mascots"></div>
+      <div class="dim small" style="margin-top:10px">Barra colorida é o limite próprio do modelo. Cinza é o limite semanal geral, que vale para todos.</div>
+    </div>
+
+    <div class="grid gap">
+      <div class="card">
+        <h2>Status <small>status.claude.com</small></h2>
+        <div id="status"></div>
+      </div>
+      <div class="card">
+        <h2>Anthropic News <small><a href="https://www.anthropic.com/news" target="_blank" rel="noopener">anthropic.com/news</a></small></h2>
+        <div id="news"></div>
+      </div>
+    </div>
+
+    <div class="card gap">
+      <div class="row"><h2 style="margin:0">Últimos 7 dias</h2><span class="sp"></span>
+        <div class="legend"><span><i style="background:var(--clawd)"></i>sessão 5h</span><span><i style="background:var(--lav)"></i>semana 7d</span></div></div>
+      <div id="chart" style="margin-top:12px"></div>
+      <div id="chartInfo" class="small dim"></div>
+    </div>
+
+    <div class="grid gap">
+      <div class="card">
+        <h2>Coleta</h2>
+        <div id="collect" class="small"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button id="refreshBtn" class="ghost" type="button">Atualizar agora</button>
+          <button id="lockBtn" class="ghost" type="button">Bloquear tela</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Ajustes</h2>
+        <form id="fSettings">
+          <div class="two">
+            <label>Atualizar a cada<select id="oRefresh"></select></label>
+            <label>Fonte dos dados<select id="oSource"></select></label>
+            <label>Modo da tela<select id="oMode"></select></label>
+            <label>Tempo em cada tela<select id="oDwell"></select></label>
+            <label>Brilho<select id="oBright"></select></label>
+            <label>Orientação<select id="oOrient"></select></label>
+            <label>Fundo<select id="oBackdrop"></select></label>
+            <label>Zoom da tela<select id="oZoom"></select></label>
+            <label>Acessórios dos mascotes<select id="oSkin"></select></label>
+            <label>Cor dos mascotes<select id="oTint"></select></label>
+          </div>
+          <label class="check"><input type="checkbox" id="oShift">Mover o conteúdo contra burn-in</label>
+          <label class="check"><input type="checkbox" id="oAuto">Abrir sozinho quando o celular ligar</label>
+          <label class="check"><input type="checkbox" id="oPanel">Painel web ligado</label>
+          <label class="check"><input type="checkbox" id="oAnim">Animações dos mascotes</label>
+          <div id="setMsg" class="msg"></div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Trocar token</h2>
+        <form id="fToken">
+          <p class="dim small" style="margin:0">Só escrita. O novo token é testado na API antes de substituir o atual. Sem reset de fábrica.</p>
+          <label>Novo token<input id="tTok" type="password" autocomplete="off" spellcheck="false" required></label>
+          <button type="submit">Verificar e trocar</button>
+          <div id="tMsg" class="msg"></div>
+        </form>
+        <h2 style="margin-top:18px">Trocar PIN</h2>
+        <form id="fPin">
+          <div class="two">
+            <label>PIN atual<input id="pCur" inputmode="numeric" type="password" autocomplete="current-password" required></label>
+            <label>Novo PIN<input id="pNew" inputmode="numeric" type="password" autocomplete="new-password" required></label>
+          </div>
+          <button type="submit" class="ghost">Trocar PIN</button>
+          <div id="pMsg" class="msg"></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card gap">
+      <h2>Zona de perigo</h2>
+      <form id="fReset" class="row" style="align-items:end;flex-wrap:wrap">
+        <label style="flex:1;min-width:200px">Digite APAGAR para apagar token, histórico e ajustes<input id="rConfirm" autocomplete="off"></label>
+        <button type="submit" class="danger">Apagar tudo</button>
+      </form>
+      <div id="rMsg" class="msg"></div>
+    </div>
+    <p id="foot" class="dim small" style="margin-top:18px"></p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = null, clockOffset = 0, editing = false;
+
+const EYE = "#0c0a08";
+function mix(a, b, t){
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b);
+  return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+function sprite(model, m, i){
+  const lk = state && state.look, def = model && lk ? lk.models[model] : null;
+  const T = def ? lk.top : 0;
+  const down = !!(m && m.down), out = !!(m && !down && m.mood === "EXHAUSTED");
+  const sleepy = !!(m && !down && !out && m.mood === "SLEEPY");
+  const sweaty = !!(m && !down && !out && m.mood === "SWEATY");
+  const heat = m && !down && !out ? m.heat : 0;
+  const base = def ? def.body : "#d77757";
+  const body = down ? "#5a5247" : out ? "#4e3530" : heat > 0 ? mix(base, "#ff3b2f", heat) : base;
+  const r = (x, y, w, h, extra = "") => `<rect x="${x}" y="${y}" width="${w + .04}" height="${h + .04}"${extra}/>`;
+  const torso = r(2, T, 12, 2) + r(2, T + 2, 12, 2) + r(2, T + 4, 12, 2) + r(2, T + 6, 12, 2);
+  const left = r(0, T + 4, 2, 2), right = r(14, T + 4, 2, 2);
+  const arms = i % 2 ? left + `<g class="arm">${right}</g>` : `<g class="arm">${left}</g>` + right;
+  let eyes;
+  if (down || out) eyes = [4, 11].map(c => `<path d="M${c - .45} ${T + 2.25}L${c + 1.45} ${T + 3.75}M${c - .45} ${T + 3.75}L${c + 1.45} ${T + 2.25}" stroke="${EYE}" stroke-width=".5" fill="none"/>`).join("");
+  else if (sleepy) eyes = [4, 11].map(c => r(c, T + 3.2, 1, .4, ` fill="${EYE}"`)).join("");
+  else eyes = `<g class="eyes">${[4, 11].map(c => r(c, T + 2, 1, 2, ` fill="${EYE}"`) + r(c, T + 2, 1, 2, ` class="lid"`)).join("")}</g>`;
+  const acc = def ? def.acc.map(([x, y, w, h, c]) => r(x, y, w, h, ` fill="${c}"`)).join("") : "";
+  const legs = `<g class="la">${r(3, T + 8, 1, 2)}${r(10, T + 8, 1, 2)}</g><g class="lb">${r(5, T + 8, 1, 2)}${r(12, T + 8, 1, 2)}</g>`;
+  let extra = "";
+  if (sweaty) extra += r(14, 3, 1, 2, ` class="drop" fill="#8fd3f4"`);
+  if (sleepy) extra += `<g class="z" fill="#a89a86">${r(13, 0, 3, 1)}${r(15, 1, 1, 1)}${r(14, 2, 1, 1)}${r(13, 3, 3, 1)}</g>`;
+  if (out) extra += `<g class="smoke" fill="#8a8078">${r(7, 3, 1, 1)}${r(8, 2, 1, 1, ` opacity=".6"`)}</g>`;
+  const cls = ["cl", sleepy && "sleepy", heat > 0 && "hot", heat >= .5 && "shake", def && def.kind === "GLASSES" && "nolook", (down || out) && "dead"].filter(Boolean).join(" ");
+  const style = `--d:${-(i * 2.3 + .7).toFixed(1)}s;--lx:${i % 2 ? -1 : 1}px`;
+  return `<svg class="${cls}" style="${style}" viewBox="0 0 16 ${T + 10}" fill="${body}" aria-hidden="true"><g class="all"><g class="bod">${torso}${arms}${eyes}${acc}</g>${legs}${extra}</g></svg>`;
+}
+$("logo").innerHTML = sprite(null, null, 1);
+
+async function api(path, body){
+  const opt = body === undefined ? {} : {method:"POST", headers:{"Content-Type":"application/json","X-Clawdboard":"1"}, body:JSON.stringify(body)};
+  const r = await fetch(path, opt);
+  let j = {};
+  try { j = await r.json(); } catch(e) {}
+  j._status = r.status;
+  return j;
+}
+function msg(el, text, ok){ el.textContent = text || ""; el.className = "msg " + (ok ? "ok" : "err"); }
+function busy(form, on){ form.querySelectorAll("button").forEach(b => b.disabled = on); }
+function show(view){ ["vSetup","vLogin","vDash"].forEach(v => $(v).classList.toggle("hidden", v !== view)); $("logoutBtn").classList.toggle("hidden", view !== "vDash"); }
+function setHTML(el, html){ if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function esc(t){ return String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function safeUrl(u){ return /^https:\/\//.test(u || "") ? esc(u) : "#"; }
+
+const pct = p => p == null ? "--" : Math.round(p) + "%";
+const level = p => p >= 85 ? "var(--bad)" : p >= 60 ? "var(--warn)" : "var(--ok)";
+const WEEK = ["dom","seg","ter","qua","qui","sex","sáb"];
+const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const IMPACT = {none:"sem impacto", minor:"leve", major:"grave", critical:"crítico"};
+const STATUS = {investigating:"investigando", identified:"identificado", monitoring:"monitorando", resolved:"resolvido", scheduled:"agendado", in_progress:"em andamento", verifying:"verificando"};
+function left(ms){
+  if (ms <= 0) return "agora";
+  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), sec = s%60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${String(m).padStart(2,"0")}m`;
+  return `${m}m ${String(sec).padStart(2,"0")}s`;
+}
+function at(ms){
+  const t = new Date(ms), n = new Date();
+  const hm = t.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  const tomorrow = new Date(n); tomorrow.setDate(n.getDate()+1);
+  if (t.toDateString() === n.toDateString()) return "hoje às " + hm;
+  if (t.toDateString() === tomorrow.toDateString()) return "amanhã às " + hm;
+  return `${WEEK[t.getDay()]} ${t.getDate()}/${String(t.getMonth()+1).padStart(2,"0")} às ${hm}`;
+}
+function ago(ms){
+  const s = Math.max(0, Math.floor(ms/1000));
+  if (s < 5) return "agora";
+  if (s < 60) return `há ${s}s`;
+  if (s < 3600) return `há ${Math.floor(s/60)} min`;
+  if (s < 86400) return `há ${Math.floor(s/3600)}h`;
+  return `há ${Math.floor(s/86400)}d`;
+}
+function newsDate(ms){ if (ms == null) return ""; const d = new Date(ms); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; }
+
+function renderWindow(el, title, sub, w, scoped){
+  const p = w ? w.percent : null;
+  const reset = w && w.resetsAt ? w.resetsAt : null;
+  const now = Date.now() + clockOffset;
+  el.innerHTML = `<h2>${title}<small>${sub}</small></h2>
+    <div class="mid"><div class="big" style="color:${p==null?"var(--dim)":level(p)}">${pct(p)}</div>
+      <div class="reset">${reset ? `<div class="muted small">libera em</div><span class="num" data-reset="${reset}">${left(reset-now)}</span><div class="muted small">${at(reset)}</div>` : `<div class="dim small">${w ? "sem reset agendado" : "aguardando dados"}</div>`}</div></div>
+    <div class="bar"><i style="width:${Math.min(100, p||0)}%;background:${p==null?"var(--dim)":level(p)}"></i></div>
+    ${scoped && scoped.length ? `<div class="chips">${scoped.map(s => `<span><i style="background:${level(s.percent)}"></i>${esc(s.label)} ${pct(s.percent)}</span>`).join("")}</div>` : ""}`;
+}
+
+function renderMascots(list){
+  const html = list.map((m, i) => {
+    const out = m.mood === "EXHAUSTED" && !m.down, p = m.percent;
+    const color = p == null ? "var(--dim)" : m.own ? level(p) : "var(--muted)";
+    const fill = p == null ? "transparent" : m.own ? level(p) : "rgba(168,154,134,.55)";
+    return `<div class="mascot"><div class="pct" style="color:${color}">${pct(p)}</div>
+      <div class="mbar"><i style="width:${Math.min(100, p||0)}%;background:${fill}"></i></div>
+      ${sprite(m.name, m, i)}
+      <div class="nm" style="color:${m.down || out ? "var(--bad)" : "var(--text)"}">${esc(m.name)}</div>
+      <div class="st">${m.down ? "instável" : out ? "esgotado" : ""}</div></div>`;
+  }).join("");
+  const box = $("mascots");
+  box.classList.toggle("still", !(state.look && state.look.animations));
+  setHTML(box, html);
+}
+
+function renderStatus(st, now){
+  if (!st) return `<div class="muted">Verificando status.claude.com...</div>`;
+  const checked = `<div class="dim small" style="margin-top:8px">verificado ${ago(now - st.fetchedAt)}</div>`;
+  if (!st.incidents.length) return `<div class="allok"><span class="dot"></span>Todos os sistemas operacionais</div>${checked}`;
+  const items = st.incidents.map(i => `<div class="inc">
+      <div class="hd"><span class="imp ${esc(i.impact || "none")}">${esc(IMPACT[i.impact] || i.impact || "incidente")}</span>
+        <span class="dim small">${esc(STATUS[i.status] || i.status)}${i.updatedAt ? " · " + ago(now - i.updatedAt) : ""}</span></div>
+      <div class="nm">${i.url ? `<a href="${safeUrl(i.url)}" target="_blank" rel="noopener">${esc(i.name)}</a>` : esc(i.name)}</div>
+      ${i.update ? `<div class="upd">${esc(i.update)}</div>` : ""}</div>`).join("");
+  const hit = st.down.length ? `<div class="small muted" style="margin-top:8px">Mascotes afetados: ${st.down.map(esc).join(", ")}</div>` : "";
+  return items + hit + checked;
+}
+
+function renderNews(news){
+  if (!news || !news.length) return `<div class="muted">Carregando notícias...</div>`;
+  return news.map(n => `<a class="news" href="${safeUrl(n.link)}" target="_blank" rel="noopener"><span class="nd">${newsDate(n.date)}</span>
+    <span class="nt">${esc(n.title)}${n.category ? `<small>${esc(n.category)}</small>` : ""}</span></a>`).join("");
+}
+
+function renderChart(hist, now){
+  const W = 900, H = 240, L = 40, R = 8, T = 8, B = 26, w = W-L-R, h = H-T-B, t0 = now - 7*86400000;
+  const x = t => L + (t - t0) / (7*86400000) * w, y = p => T + h - Math.max(0, Math.min(100, p)) / 100 * h;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Uso nos últimos 7 dias">`;
+  [0,25,50,75,100].forEach(g => { s += `<line x1="${L}" x2="${L+w}" y1="${y(g)}" y2="${y(g)}" stroke="#383024"/><text x="${L-6}" y="${y(g)+4}" fill="#7d715f" font-size="11" text-anchor="end">${g}%</text>`; });
+  const d = new Date(t0); d.setHours(24,0,0,0);
+  for (; d.getTime() < now; d.setDate(d.getDate()+1)) {
+    const ms = d.getTime();
+    s += `<line x1="${x(ms)}" x2="${x(ms)}" y1="${T}" y2="${T+h}" stroke="#383024" stroke-opacity=".6"/>`;
+    if (ms + 43200000 < now) s += `<text x="${x(ms+43200000)}" y="${H-7}" fill="#7d715f" font-size="11" text-anchor="middle">${WEEK[d.getDay()]} ${d.getDate()}</text>`;
+  }
+  const series = (idx, color) => {
+    let seg = [], prev = 0, out = "";
+    const flush = () => {
+      if (seg.length > 1) out += `<polyline fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${seg.join(" ")}"/>`;
+      else if (seg.length === 1) { const [cx, cy] = seg[0].split(","); out += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="${color}"/>`; }
+      seg = [];
+    };
+    hist.forEach(r => {
+      if (r[0] < t0) return;
+      const v = r[idx];
+      if (v == null) { flush(); return; }
+      if (seg.length && r[0] - prev > 45*60000) flush();
+      seg.push(`${x(r[0]).toFixed(1)},${y(v).toFixed(1)}`);
+      prev = r[0];
+    });
+    flush();
+    return out;
+  };
+  s += series(2, "#b9a6f2") + series(1, "#d77757") + `</svg>`;
+  $("chart").innerHTML = s;
+  const inWin = hist.filter(r => r[0] >= t0);
+  const peak = Math.max(...inWin.map(r => r[1] ?? -1));
+  $("chartInfo").textContent = inWin.length ? `${inWin.length} de 336 amostras · pico 5h ${peak >= 0 ? Math.round(peak) + "%" : "--"} · buracos = aparelho desligado ou tela apagada` : "Sem amostras ainda. Uma é gravada a cada 30 minutos.";
+}
+
+function fillSelect(sel, items, value){
+  sel.innerHTML = items.map(it => `<option value="${it.id}"${String(it.id) === String(value) ? " selected" : ""}>${it.label}</option>`).join("");
+}
+
+function render(){
+  const s = state, now = Date.now() + clockOffset;
+  const u = s.usage;
+  renderWindow($("c5"), "Sessão", "janela de 5 horas", u && u.fiveHour, null);
+  renderWindow($("c7"), "Semana", "janela de 7 dias", u && u.sevenDay, u && u.scoped);
+  renderMascots(s.mascots || []);
+  $("status").innerHTML = renderStatus(s.status, now);
+  setHTML($("news"), renderNews(s.news));
+
+  const src = u ? (u.source === "USAGE" ? "endpoint de uso" : "sondagem" + (s.usageNote ? ` (${esc(s.usageNote)})` : "")) : "--";
+  $("collect").innerHTML = `
+    <div>Última leitura: <b>${u ? ago(now - u.fetchedAt) : "nenhuma"}</b> · fonte: ${src}</div>
+    <div class="muted">Próxima: ${s.nextRefreshAt ? "em " + left(s.nextRefreshAt - now) : "--"}</div>
+    ${s.error ? `<div style="color:${s.authError ? "var(--bad)" : "var(--warn)"};margin-top:6px">${esc(s.error)}</div>` : ""}
+    <div class="dim" style="margin-top:6px">Tela do celular: ${s.unlocked ? "desbloqueada" : "bloqueada"}</div>`;
+  renderChart(s.history || [], now);
+
+  const o = s.options, st = s.settings;
+  fillSelect($("oRefresh"), o.refreshSec.map(v => ({id:v, label: v < 60 ? v + " s" : v/60 + " min"})), st.refreshSec);
+  fillSelect($("oSource"), o.source, st.source);
+  fillSelect($("oMode"), o.mode, st.mode);
+  fillSelect($("oDwell"), o.dwellSec.map(v => ({id:v, label: v + " s"})), st.dwellSec);
+  fillSelect($("oBright"), o.brightness, st.brightness);
+  fillSelect($("oOrient"), o.orientation, st.orientation);
+  fillSelect($("oBackdrop"), o.backdrop, st.backdrop);
+  fillSelect($("oZoom"), o.zoom.map(v => ({id:v, label: v + "%"})), st.zoom);
+  fillSelect($("oSkin"), o.skin, st.skin);
+  fillSelect($("oTint"), o.tint, st.tint);
+  $("oShift").checked = st.pixelShift; $("oAuto").checked = st.autostart; $("oPanel").checked = st.panelEnabled; $("oAnim").checked = st.animations;
+  const mail = s.contact ? ` · <a href="mailto:${esc(s.contact)}?subject=${encodeURIComponent("Clawdboard " + s.version)}">feedback e sugestões</a>` : "";
+  $("foot").innerHTML = `Clawdboard ${esc(s.version)} · criado por Vinícius Pires da Silva${mail} · ${esc(s.panelUrl || "")}`;
+}
+
+function setPill(unlocked){
+  const p = $("lockPill");
+  p.textContent = unlocked ? "tela desbloqueada" : "tela bloqueada";
+  p.className = "pill " + (unlocked ? "on" : "off");
+}
+
+function tickClock(){
+  const t = new Date(Date.now() + clockOffset);
+  $("clk").textContent = t.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  $("clkDate").textContent = t.toLocaleDateString("pt-BR", {weekday:"long", day:"numeric", month:"long"});
+}
+
+document.addEventListener("focusin", e => { if (e.target.matches("select")) editing = true; });
+document.addEventListener("focusout", e => { if (e.target.matches("select")) editing = false; });
+
+async function load(){
+  const s = await api("/api/state");
+  if (s._status === 401) {
+    const info = await api("/api/info");
+    setPill(info.unlocked);
+    show(info.provisioned ? "vLogin" : "vSetup");
+    if (info.provisioned && info.remaining < 10) msg($("lMsg"), `Restam ${info.remaining} tentativas antes de apagar tudo.`, false);
+    return;
+  }
+  if (!s.provisioned) { show("vSetup"); return; }
+  clockOffset = s.now - Date.now();
+  state = s;
+  setPill(s.unlocked);
+  show("vDash");
+  if (!editing) render();
+}
+
+tickClock();
+setInterval(() => {
+  const now = Date.now() + clockOffset;
+  document.querySelectorAll("[data-reset]").forEach(el => el.textContent = left(+el.dataset.reset - now));
+  tickClock();
+}, 1000);
+setInterval(() => { if (!$("vDash").classList.contains("hidden")) load(); }, 10000);
+
+$("fSetup").addEventListener("submit", async e => {
+  e.preventDefault();
+  if ($("sPin").value !== $("sPin2").value) return msg($("sMsg"), "Os PINs não conferem", false);
+  busy(e.target, true); msg($("sMsg"), "Testando o token na API...", true);
+  const r = await api("/api/setup", {pin: $("sPin").value, token: $("sTok").value.trim()});
+  busy(e.target, false);
+  if (r.ok) { e.target.reset(); msg($("sMsg"), "", true); load(); } else msg($("sMsg"), r.error, false);
+});
+$("fLogin").addEventListener("submit", async e => {
+  e.preventDefault(); busy(e.target, true);
+  const r = await api("/api/login", {pin: $("lPin").value});
+  busy(e.target, false); $("lPin").value = "";
+  if (r.ok) { msg($("lMsg"), "", true); load(); }
+  else if (r._status === 410) { msg($("lMsg"), r.error, false); setTimeout(load, 1500); }
+  else msg($("lMsg"), r.remaining != null ? `${r.error}. Restam ${r.remaining} tentativas.` : r.error, false);
+});
+$("fSettings").addEventListener("change", async () => {
+  const body = {
+    refreshSec: +$("oRefresh").value, source: $("oSource").value, mode: $("oMode").value, dwellSec: +$("oDwell").value,
+    brightness: $("oBright").value, orientation: $("oOrient").value, backdrop: $("oBackdrop").value, zoom: +$("oZoom").value,
+    skin: $("oSkin").value, tint: $("oTint").value, animations: $("oAnim").checked,
+    pixelShift: $("oShift").checked, autostart: $("oAuto").checked, panelEnabled: $("oPanel").checked,
+  };
+  if (!body.panelEnabled && !confirm("Desligar o painel? Para religar, use os ajustes no próprio celular.")) { $("oPanel").checked = true; return; }
+  const r = await api("/api/settings", body);
+  msg($("setMsg"), r.ok ? "Salvo" : r.error, !!r.ok);
+  setTimeout(() => msg($("setMsg"), "", true), 1800);
+  if (r.ok) load();
+});
+$("fToken").addEventListener("submit", async e => {
+  e.preventDefault(); busy(e.target, true); msg($("tMsg"), "Testando o novo token na API...", true);
+  const r = await api("/api/token", {token: $("tTok").value.trim()});
+  busy(e.target, false);
+  if (r.ok) { e.target.reset(); msg($("tMsg"), "Token trocado e verificado", true); load(); } else msg($("tMsg"), r.error, false);
+});
+$("fPin").addEventListener("submit", async e => {
+  e.preventDefault(); busy(e.target, true);
+  const r = await api("/api/pin", {pin: $("pCur").value, newPin: $("pNew").value});
+  busy(e.target, false); e.target.reset();
+  msg($("pMsg"), r.ok ? "PIN trocado" : (r.remaining != null ? `${r.error}. Restam ${r.remaining} tentativas.` : r.error), !!r.ok);
+  if (r._status === 410) setTimeout(load, 1500);
+});
+$("fReset").addEventListener("submit", async e => {
+  e.preventDefault();
+  const r = await api("/api/reset", {confirm: $("rConfirm").value.trim()});
+  msg($("rMsg"), r.ok ? "Tudo apagado" : r.error, !!r.ok);
+  if (r.ok) setTimeout(load, 800);
+});
+$("refreshBtn").addEventListener("click", async () => { await api("/api/refresh", {}); setTimeout(load, 2500); });
+$("lockBtn").addEventListener("click", async () => { await api("/api/lock", {}); load(); });
+$("logoutBtn").addEventListener("click", async () => { await api("/api/logout", {}); load(); });
+
+load();
+</script>
+</body>
+</html>
