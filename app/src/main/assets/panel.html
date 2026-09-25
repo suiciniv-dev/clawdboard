@@ -84,6 +84,10 @@ button:disabled{opacity:.55;cursor:wait}
 .center{max-width:420px;margin:40px auto}
 code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmd{display:flex;gap:8px;margin-top:12px}
+.cmd input{flex:1;font:13px ui-monospace,Consolas,monospace;color:var(--clawd)}
+.steps{margin:10px 0 0;padding-left:20px;color:var(--muted)}
+.steps li{margin:4px 0}
 .row{display:flex;align-items:flex-end;gap:10px}
 .hidden{display:none!important}
 #foot a{color:var(--clawd)}
@@ -145,15 +149,14 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 
   <section id="vSetup" class="hidden center card">
     <h2>Primeira configuração</h2>
-    <p class="muted small">No PC, rode <code>claude setup-token</code>, faça login e copie o token gerado (começa com <code>sk-ant-oat</code>). Ele vale um ano.</p>
+    <p class="muted small">Crie o PIN do aparelho. Em seguida aparece um comando para conectar o Claude Code deste PC; o celular não guarda token nenhum.</p>
     <form id="fSetup">
       <label>PIN do aparelho (4 a 8 dígitos)<input id="sPin" inputmode="numeric" type="password" autocomplete="new-password" required></label>
       <label>Repita o PIN<input id="sPin2" inputmode="numeric" type="password" autocomplete="new-password" required></label>
-      <label>Token OAuth<input id="sTok" type="password" autocomplete="off" spellcheck="false" required></label>
-      <button type="submit">Verificar e salvar</button>
+      <button type="submit">Salvar</button>
       <div id="sMsg" class="msg"></div>
     </form>
-    <p class="dim small">O token é cifrado com AES-256-GCM usando uma chave derivada do PIN e depois protegido pelo Keystore do Android. O PIN nunca é salvo. 10 PINs errados apagam tudo.</p>
+    <p class="dim small">O PIN protege os ajustes e este painel. Ele nunca é salvo, e 10 PINs errados apagam tudo.</p>
   </section>
 
   <section id="vLogin" class="hidden center card">
@@ -199,10 +202,17 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 
     <div class="grid gap">
       <div class="card">
-        <h2>Coleta</h2>
+        <h2>Claude Code no PC</h2>
         <div id="collect" class="small"></div>
+        <ol class="steps small">
+          <li>Copie o comando abaixo e rode no PowerShell deste PC.</li>
+          <li>Mande uma mensagem no Claude Code, no VS Code ou no terminal. Ao fim da resposta, o uso chega ao celular.</li>
+        </ol>
+        <div class="cmd"><input id="pairCmd" readonly spellcheck="false"><button id="copyBtn" type="button">Copiar</button></div>
+        <div id="pairMsg" class="msg"></div>
+        <p class="dim small" style="margin:6px 0 0">O comando instala um hook em <code>~/.claude</code> que roda o <code>/usage</code> do Claude Code ao fim das respostas, no máximo a cada 2 minutos e sem gastar tokens. Ele manda só os percentuais e os horários de reset, e guarda um backup dos seus ajustes em <code>settings.json.antes-do-clawdboard</code>.</p>
         <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-          <button id="refreshBtn" class="ghost" type="button">Atualizar agora</button>
+          <button id="pairBtn" class="ghost" type="button">Gerar nova chave</button>
           <button id="lockBtn" class="ghost" type="button">Bloquear tela</button>
         </div>
       </div>
@@ -210,8 +220,6 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
         <h2>Ajustes</h2>
         <form id="fSettings">
           <div class="two">
-            <label>Atualizar a cada<select id="oRefresh"></select></label>
-            <label>Fonte dos dados<select id="oSource"></select></label>
             <label>Modo da tela<select id="oMode"></select></label>
             <label>Tempo em cada tela<select id="oDwell"></select></label>
             <label>Brilho<select id="oBright"></select></label>
@@ -230,14 +238,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
         </form>
       </div>
       <div class="card">
-        <h2>Trocar token</h2>
-        <form id="fToken">
-          <p class="dim small" style="margin:0">Só escrita. O novo token é testado na API antes de substituir o atual. Sem reset de fábrica.</p>
-          <label>Novo token<input id="tTok" type="password" autocomplete="off" spellcheck="false" required></label>
-          <button type="submit">Verificar e trocar</button>
-          <div id="tMsg" class="msg"></div>
-        </form>
-        <h2 style="margin-top:18px">Trocar PIN</h2>
+        <h2>Trocar PIN</h2>
         <form id="fPin">
           <div class="two">
             <label>PIN atual<input id="pCur" inputmode="numeric" type="password" autocomplete="current-password" required></label>
@@ -449,17 +450,14 @@ function render(){
   $("status").innerHTML = renderStatus(s.status, now);
   setHTML($("news"), renderNews(s.news));
 
-  const src = u ? (u.source === "USAGE" ? "endpoint de uso" : "sondagem" + (s.usageNote ? ` (${esc(s.usageNote)})` : "")) : "--";
-  $("collect").innerHTML = `
-    <div>Última leitura: <b>${u ? ago(now - u.fetchedAt) : "nenhuma"}</b> · fonte: ${src}</div>
-    <div class="muted">Próxima: ${s.nextRefreshAt ? "em " + left(s.nextRefreshAt - now) : "--"}</div>
-    ${s.error ? `<div style="color:${s.authError ? "var(--bad)" : "var(--warn)"};margin-top:6px">${esc(s.error)}</div>` : ""}
-    <div class="dim" style="margin-top:6px">Tela do celular: ${s.unlocked ? "desbloqueada" : "bloqueada"}</div>`;
+  $("collect").innerHTML = s.lastPushAt
+    ? `<div style="color:var(--ok)">Último envio do Claude Code: <b>${ago(now - s.lastPushAt)}</b></div>`
+    : `<div style="color:var(--warn)">Nenhum envio ainda. Siga os dois passos abaixo.</div>`;
+  $("collect").innerHTML += `<div class="dim" style="margin-top:4px">Tela do celular: ${s.unlocked ? "desbloqueada" : "bloqueada"}</div>`;
+  if (document.activeElement !== $("pairCmd")) $("pairCmd").value = s.pairCommand || "";
   renderChart(s.history || [], now);
 
   const o = s.options, st = s.settings;
-  fillSelect($("oRefresh"), o.refreshSec.map(v => ({id:v, label: v < 60 ? v + " s" : v/60 + " min"})), st.refreshSec);
-  fillSelect($("oSource"), o.source, st.source);
   fillSelect($("oMode"), o.mode, st.mode);
   fillSelect($("oDwell"), o.dwellSec.map(v => ({id:v, label: v + " s"})), st.dwellSec);
   fillSelect($("oBright"), o.brightness, st.brightness);
@@ -516,8 +514,8 @@ setInterval(() => { if (!$("vDash").classList.contains("hidden")) load(); }, 100
 $("fSetup").addEventListener("submit", async e => {
   e.preventDefault();
   if ($("sPin").value !== $("sPin2").value) return msg($("sMsg"), "Os PINs não conferem", false);
-  busy(e.target, true); msg($("sMsg"), "Testando o token na API...", true);
-  const r = await api("/api/setup", {pin: $("sPin").value, token: $("sTok").value.trim()});
+  busy(e.target, true); msg($("sMsg"), "Salvando...", true);
+  const r = await api("/api/setup", {pin: $("sPin").value});
   busy(e.target, false);
   if (r.ok) { e.target.reset(); msg($("sMsg"), "", true); load(); } else msg($("sMsg"), r.error, false);
 });
@@ -531,7 +529,7 @@ $("fLogin").addEventListener("submit", async e => {
 });
 $("fSettings").addEventListener("change", async () => {
   const body = {
-    refreshSec: +$("oRefresh").value, source: $("oSource").value, mode: $("oMode").value, dwellSec: +$("oDwell").value,
+    mode: $("oMode").value, dwellSec: +$("oDwell").value,
     brightness: $("oBright").value, orientation: $("oOrient").value, backdrop: $("oBackdrop").value, zoom: +$("oZoom").value,
     skin: $("oSkin").value, tint: $("oTint").value, animations: $("oAnim").checked, music: $("oMusic").checked,
     pixelShift: $("oShift").checked, autostart: $("oAuto").checked, panelEnabled: $("oPanel").checked,
@@ -541,12 +539,6 @@ $("fSettings").addEventListener("change", async () => {
   msg($("setMsg"), r.ok ? "Salvo" : r.error, !!r.ok);
   setTimeout(() => msg($("setMsg"), "", true), 1800);
   if (r.ok) load();
-});
-$("fToken").addEventListener("submit", async e => {
-  e.preventDefault(); busy(e.target, true); msg($("tMsg"), "Testando o novo token na API...", true);
-  const r = await api("/api/token", {token: $("tTok").value.trim()});
-  busy(e.target, false);
-  if (r.ok) { e.target.reset(); msg($("tMsg"), "Token trocado e verificado", true); load(); } else msg($("tMsg"), r.error, false);
 });
 $("fPin").addEventListener("submit", async e => {
   e.preventDefault(); busy(e.target, true);
@@ -561,7 +553,20 @@ $("fReset").addEventListener("submit", async e => {
   msg($("rMsg"), r.ok ? "Tudo apagado" : r.error, !!r.ok);
   if (r.ok) setTimeout(load, 800);
 });
-$("refreshBtn").addEventListener("click", async () => { await api("/api/refresh", {}); setTimeout(load, 2500); });
+$("copyBtn").addEventListener("click", () => {
+  const f = $("pairCmd");
+  f.focus(); f.select();
+  let done = false;
+  try { done = document.execCommand("copy"); } catch (e) {}
+  msg($("pairMsg"), done ? "Copiado. Cole no PowerShell e aperte Enter." : "Selecione o comando e copie com Ctrl+C.", done);
+  f.blur();
+});
+$("pairBtn").addEventListener("click", async () => {
+  if (!confirm("Gerar uma chave nova? A atual para de funcionar e o comando precisa rodar de novo no PC.")) return;
+  const r = await api("/api/pair", {});
+  msg($("pairMsg"), r.ok ? "Chave nova gerada. Copie o comando de novo." : r.error, !!r.ok);
+  if (r.ok) load();
+});
 $("lockBtn").addEventListener("click", async () => { await api("/api/lock", {}); load(); });
 $("logoutBtn").addEventListener("click", async () => { await api("/api/logout", {}); load(); });
 

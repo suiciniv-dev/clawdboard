@@ -13,7 +13,6 @@ data class UsageSnapshot(
     val fiveHour: UsageWindow?,
     val sevenDay: UsageWindow?,
     val scoped: List<ScopedLimit>,
-    val source: DataSource,
     val fetchedAt: Long,
 ) {
     fun toJson(): JSONObject {
@@ -25,15 +24,8 @@ data class UsageSnapshot(
             sc.put(JSONObject().put("label", it.label).put("percent", it.percent).put("resetsAt", it.resetsAt ?: JSONObject.NULL))
         }
         return JSONObject().put("fiveHour", w(fiveHour)).put("sevenDay", w(sevenDay)).put("scoped", sc)
-            .put("source", source.name).put("fetchedAt", fetchedAt)
+            .put("fetchedAt", fetchedAt)
     }
-}
-
-sealed interface FetchResult {
-    data class Ok(val snap: UsageSnapshot) : FetchResult
-    data class Auth(val code: Int, val message: String) : FetchResult
-    data class Limited(val retryAfterSec: Long?, val message: String) : FetchResult
-    data class Failed(val message: String) : FetchResult
 }
 
 data class Incident(

@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
-enum class DataSource(val label: String) { AUTO("Automático"), USAGE("Endpoint de uso"), PROBE("Sondagem") }
 enum class ScreenMode(val label: String) { STATIC("Estático"), MASCOTS("Mascotes"), CAROUSEL("Carrossel"), CLOCK("Relógio") }
 enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto AMOLED") }
 enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
@@ -16,8 +15,6 @@ enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"),
 enum class Tint(val label: String) { CORAL("Coral"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
 
 data class Prefs(
-    val refreshSec: Int = 60,
-    val source: DataSource = DataSource.AUTO,
     val mode: ScreenMode = ScreenMode.CAROUSEL,
     val dwellSec: Int = 15,
     val brightness: Brightness = Brightness.SYSTEM,
@@ -33,13 +30,12 @@ data class Prefs(
     val music: Boolean = false,
 ) {
     fun sanitized() = copy(
-        refreshSec = refreshSec.coerceIn(REFRESH_OPTIONS.first(), REFRESH_OPTIONS.last()),
         dwellSec = dwellSec.coerceIn(5, 120),
         zoom = zoom.coerceIn(ZOOM_OPTIONS.first(), ZOOM_OPTIONS.last()),
     )
 
     fun toJson(): JSONObject = JSONObject()
-        .put("refreshSec", refreshSec).put("source", source.name).put("mode", mode.name)
+        .put("mode", mode.name)
         .put("dwellSec", dwellSec).put("brightness", brightness.name).put("orientation", orientation.name)
         .put("pixelShift", pixelShift).put("autostart", autostart).put("panelEnabled", panelEnabled)
         .put("backdrop", backdrop.name).put("zoom", zoom)
@@ -47,8 +43,6 @@ data class Prefs(
         .put("music", music)
 
     fun merge(o: JSONObject): Prefs = copy(
-        refreshSec = if (o.has("refreshSec")) o.optInt("refreshSec", refreshSec) else refreshSec,
-        source = enumOr(o.str("source"), source),
         mode = enumOr(o.str("mode"), mode),
         dwellSec = if (o.has("dwellSec")) o.optInt("dwellSec", dwellSec) else dwellSec,
         brightness = enumOr(o.str("brightness"), brightness),
@@ -65,7 +59,6 @@ data class Prefs(
     ).sanitized()
 
     companion object {
-        val REFRESH_OPTIONS = listOf(30, 60, 120, 300, 600)
         val DWELL_OPTIONS = listOf(8, 15, 30, 60)
         val ZOOM_OPTIONS = listOf(90, 100, 115, 130, 150)
 
@@ -73,10 +66,8 @@ data class Prefs(
             fun <T : Enum<T>> e(values: List<T>, label: (T) -> String) =
                 JSONArray().apply { values.forEach { put(JSONObject().put("id", it.name).put("label", label(it))) } }
             return JSONObject()
-                .put("refreshSec", JSONArray(REFRESH_OPTIONS))
                 .put("dwellSec", JSONArray(DWELL_OPTIONS))
                 .put("zoom", JSONArray(ZOOM_OPTIONS))
-                .put("source", e(DataSource.entries) { it.label })
                 .put("mode", e(ScreenMode.entries) { it.label })
                 .put("brightness", e(Brightness.entries) { it.label })
                 .put("orientation", e(Orientation.entries) { it.label })

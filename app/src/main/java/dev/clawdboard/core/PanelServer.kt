@@ -72,6 +72,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         if (parts.size < 2) return
         val method = parts[0].uppercase()
         val path = parts[1].substringBefore('?')
+        val query = parts[1].substringAfter('?', "")
         val headers = HashMap<String, String>()
         while (true) {
             val line = readLine(input) ?: break
@@ -92,7 +93,7 @@ class PanelServer(private val app: Context, private val repo: Repository) {
             read += n
         }
         val resp = try {
-            route(method, path, headers, String(body, 0, read, Charsets.UTF_8))
+            route(method, path, query, headers, String(body, 0, read, Charsets.UTF_8))
         } catch (e: Exception) {
             json(500, err(e.message ?: e.javaClass.simpleName))
         }
@@ -167,8 +168,14 @@ class PanelServer(private val app: Context, private val repo: Repository) {
 
     private val clearCookie = "Set-Cookie" to "cb_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0"
 
-    private fun route(method: String, path: String, headers: Map<String, String>, body: String): Resp {
+    private fun param(query: String, name: String): String? =
+        query.split('&').firstOrNull { it.startsWith("$name=") }?.substringAfter('=')?.takeIf { it.isNotEmpty() }
+
+    private fun text(code: Int, body: String) = Resp(code, "text/plain; charset=utf-8", body.toByteArray(Charsets.UTF_8))
+
+    private fun route(method: String, path: String, query: String, headers: Map<String, String>, body: String): Resp {
         if (!hostAllowed(headers["host"])) return json(403, err("Host não permitido"))
+        val host = headers["host"].orEmpty()
         if (method == "GET" && (path == "/" || path == "/index.html")) {
             return Resp(
                 200, "text/html; charset=utf-8", page,
@@ -177,6 +184,11 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         }
         if (method == "GET" && path == "/favicon.ico") return Resp(204, "text/plain", ByteArray(0))
         if (method == "GET" && path == "/fredoka.ttf") return Resp(200, "font/ttf", font)
+        if (method == "GET" && path == "/pc/install.ps1") {
+            val script = repo.installerFor(host, param(query, "k"))
+                ?: return text(403, "Write-Host 'Chave do Clawdboard inválida. Copie o comando de novo no painel.' -ForegroundColor Red")
+            return text(200, script)
+        }
         if (!path.startsWith("/api/")) return json(404, err("Não encontrado"))
         if (method == "POST" && headers["x-clawdboard"] != "1") return json(403, err("Requisição sem cabeçalho do painel"))
 
@@ -187,8 +199,13 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         when ("$method $path") {
             "GET /api/info" -> return json(200, repo.infoJson().put("authenticated", authed))
 
+            "POST /api/push" -> {
+                if (!repo.pushKeyValid(headers["x-clawdboard-key"])) return json(401, err("Chave de pareamento inválida"))
+                return if (repo.receivePush(o)) json(200, ok()) else json(400, err("Sem rate_limits"))
+            }
+
             "POST /api/setup" -> {
-                val r = runBlocking { repo.provision(o.optString("pin"), o.optString("token")) }
+                val r = runBlocking { repo.provision(o.optString("pin")) }
                 return when (r) {
                     Repository.Outcome.Ok -> json(200, ok(), listOf(newSessionCookie()))
                     is Repository.Outcome.Error -> json(400, err(r.message))
@@ -215,17 +232,17 @@ class PanelServer(private val app: Context, private val repo: Repository) {
         if (!authed) return json(401, err("Faça login com o PIN").put("needLogin", true))
 
         return when ("$method $path") {
-            "GET /api/state" -> json(200, repo.stateJson())
+            "GET /api/state" -> json(200, repo.stateJson(host))
 
             "POST /api/settings" -> {
                 val p = repo.updateSettings { it.merge(o) }
                 json(200, ok().put("settings", p.toJson()))
             }
 
-            "POST /api/token" -> when (val r = runBlocking { repo.rotateToken(o.optString("token")) }) {
-                Repository.Outcome.Ok -> json(200, ok())
+            "POST /api/pair" -> when (val r = runBlocking { repo.newPairKey() }) {
+                Repository.Outcome.Ok -> json(200, ok().put("pairCommand", repo.pairCommand(host)))
                 is Repository.Outcome.Error -> json(400, err(r.message))
-                else -> json(400, err("Falha ao trocar o token"))
+                else -> json(400, err("Falha ao gerar a chave"))
             }
 
             "POST /api/pin" -> when (val r = runBlocking { repo.changePin(o.optString("pin"), o.optString("newPin")) }) {
@@ -233,11 +250,6 @@ class PanelServer(private val app: Context, private val repo: Repository) {
                 is Repository.Outcome.WrongPin -> json(401, err("PIN atual incorreto").put("remaining", r.remaining))
                 Repository.Outcome.Wiped -> json(410, err("10 PINs errados: o aparelho foi apagado"))
                 is Repository.Outcome.Error -> json(400, err(r.message))
-            }
-
-            "POST /api/refresh" -> {
-                repo.requestRefresh()
-                json(200, ok())
             }
 
             "POST /api/lock" -> {

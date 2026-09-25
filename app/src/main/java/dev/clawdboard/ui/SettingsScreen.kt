@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import dev.clawdboard.core.Nudge
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +42,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.clawdboard.BuildConfig
 import dev.clawdboard.core.Backdrop
 import dev.clawdboard.core.Brightness
-import dev.clawdboard.core.DataSource
 import dev.clawdboard.core.Orientation
 import dev.clawdboard.core.Prefs
 import dev.clawdboard.core.Repository
@@ -57,12 +55,10 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
     val scope = rememberCoroutineScope()
-    val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
+    val now = LocalNow.current
 
-    var newToken by remember { mutableStateOf("") }
-    var tokenMsg by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
-    var tokenBusy by remember { mutableStateOf(false) }
+    var pairMsg by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var curPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
     var newPin2 by remember { mutableStateOf("") }
@@ -81,24 +77,28 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
             }
             st.panelUrl?.let { Text("Painel web: $it  (login com o mesmo PIN)", color = C.muted, fontSize = 14.sp) }
 
-            Section("Atualização")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Prefs.REFRESH_OPTIONS.forEach { s ->
-                    Chip(if (s < 60) "${s}s" else "${s / 60} min", prefs.refreshSec == s) { repo.updateSettings { it.copy(refreshSec = s) } }
-                }
-            }
-
-            Section("Fonte dos dados")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DataSource.entries.forEach { d -> Chip(d.label, prefs.source == d) { repo.updateSettings { it.copy(source = d) } } }
-            }
-            Hint(
-                when (prefs.source) {
-                    DataSource.AUTO -> "Tenta o endpoint de uso e cai para a sondagem se o token não tiver permissão."
-                    DataSource.USAGE -> "Endpoint interno /api/oauth/usage. Não gasta requisição, mas não é documentado."
-                    DataSource.PROBE -> "Envia uma mensagem de 1 token ao Haiku e lê os headers de limite."
-                }
+            Section("Claude Code no PC")
+            val at = st.lastPushAt
+            Text(
+                if (at != null) "Último envio ${fmtAgo(now - at)}" else "Nenhum envio ainda",
+                color = if (at != null) C.ok else C.warn, fontSize = 15.sp,
             )
+            Hint(
+                "O uso vem do próprio Claude Code no PC: um hook roda o /usage ao fim das respostas, no VS Code ou no terminal, " +
+                    "no máximo a cada 2 minutos e sem gastar tokens. O celular não guarda token nenhum. " +
+                    "Para conectar, abra ${st.panelUrl ?: "o painel web"} no PC, entre com o PIN e rode no PowerShell o comando de \"Conectar ao Claude Code\"."
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = {
+                scope.launch {
+                    pairMsg = when (val r = repo.newPairKey()) {
+                        Repository.Outcome.Ok -> true to "Chave nova gerada. Rode o comando do painel de novo no PC."
+                        is Repository.Outcome.Error -> false to r.message
+                        else -> false to "Não foi possível gerar a chave"
+                    }
+                }
+            }) { Text("Gerar nova chave", color = C.text) }
+            pairMsg?.let { (ok, m) -> Text(m, color = if (ok) C.ok else C.bad, fontSize = 14.sp) }
 
             Section("Tela")
             Label("Modo")
@@ -173,30 +173,6 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                 }
             }
 
-            Section("Trocar token")
-            Hint("Só escrita: o token atual nunca é mostrado. O novo é testado na API antes de ser salvo.")
-            SecretField(newToken, { newToken = it.trim() }, "Novo token (sk-ant-oat...)")
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { clipboard.getText()?.text?.trim()?.let { newToken = it } }) { Text("Colar", color = C.clawd) }
-                Spacer(Modifier.weight(1f))
-                Button(
-                    enabled = !tokenBusy && newToken.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = C.clawd, contentColor = C.bg),
-                    onClick = {
-                        tokenBusy = true
-                        scope.launch {
-                            tokenMsg = when (val r = repo.rotateToken(newToken)) {
-                                Repository.Outcome.Ok -> { newToken = ""; true to "Token trocado e verificado" }
-                                is Repository.Outcome.Error -> false to r.message
-                                else -> false to "Não foi possível trocar"
-                            }
-                            tokenBusy = false
-                        }
-                    },
-                ) { Text(if (tokenBusy) "Verificando..." else "Verificar e trocar") }
-            }
-            tokenMsg?.let { (ok, m) -> Text(m, color = if (ok) C.ok else C.bad, fontSize = 14.sp) }
-
             Section("Trocar PIN")
             SecretField(curPin, { curPin = it.filter(Char::isDigit).take(8) }, "PIN atual", numeric = true)
             SecretField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, "Novo PIN", numeric = true)
@@ -234,7 +210,7 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                     },
                 ) { Text(if (confirmReset) "Toque de novo para apagar tudo" else "Apagar tudo") }
             }
-            Hint("10 PINs errados seguidos também apagam token, histórico e ajustes.")
+            Hint("10 PINs errados seguidos também apagam a chave de pareamento, o histórico e os ajustes.")
 
             Section("Créditos")
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -247,7 +223,7 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
             }
             Spacer(Modifier.height(10.dp))
             Credit("Mascote", "Clawd é o mascote do Claude Code, da Anthropic")
-            Credit("Dados", "api.anthropic.com, status.claude.com e o feed Olshansk/rss-feeds")
+            Credit("Dados", "Claude Code no PC, status.claude.com e o feed Olshansk/rss-feeds")
             Credit("Feedback", Nudge.EMAIL, C.clawd) { sendFeedback(context) }
             Hint("Projeto pessoal de fã, sem vínculo com a Anthropic.")
             Spacer(Modifier.height(28.dp))

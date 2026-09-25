@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.clawdboard.core.DataSource
 import dev.clawdboard.core.History
 import dev.clawdboard.core.MODELS
 import dev.clawdboard.core.Mood
@@ -100,13 +99,11 @@ private fun SmallClock() {
 private fun Footer(st: Repository.State, compact: Boolean) {
     val now = LocalNow.current
     Column {
-        when {
-            st.usageError != null -> Text(st.usageError, color = if (st.authError) C.bad else C.warn, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            st.usage != null -> {
-                val src = if (st.usage.source == DataSource.USAGE) "endpoint de uso" else "sondagem" + (st.usageNote?.let { " ($it)" } ?: "")
-                Text("atualizado ${fmtAgo(now - st.usage.fetchedAt)} · $src", color = C.dim, fontSize = 13.sp)
-            }
-            else -> Text("buscando uso...", color = C.dim, fontSize = 13.sp)
+        val at = st.lastPushAt
+        if (st.usage != null && at != null) {
+            Text("atualizado ${fmtAgo(now - at)} · Claude Code", color = C.dim, fontSize = 13.sp)
+        } else {
+            Text("aguardando o Claude Code · conecte pelo painel no PC", color = C.warn, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         if (!compact) st.panelUrl?.let { Text("painel: ${it.removePrefix("http://")}", color = C.dim, fontSize = 12.sp) }
     }

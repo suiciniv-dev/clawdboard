@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -170,7 +169,7 @@ fun LockScreen(repo: Repository, st: Repository.State) {
     val remaining = 10 - st.failures
     PinPad(
         title = "Clawdboard bloqueado",
-        subtitle = "Digite o PIN para liberar o token",
+        subtitle = "Digite o PIN para liberar o painel",
         message = msg ?: if (st.failures > 0) "Restam $remaining tentativas antes de apagar tudo" else null,
         messageIsError = msg != null || st.failures > 0,
         busy = busy,
@@ -238,17 +237,17 @@ fun SetupScreen(repo: Repository, st: Repository.State) {
             Column(Modifier.widthIn(max = 460.dp)) {
                 if (st.wiped) {
                     Text(
-                        "O PIN foi errado 10 vezes ou o aparelho foi resetado. O token e o histórico foram apagados.",
+                        "O PIN foi errado 10 vezes ou o aparelho foi resetado. A chave de pareamento e o histórico foram apagados.",
                         color = C.bad, fontSize = 14.sp,
                     )
                     Spacer(Modifier.height(14.dp))
                 }
-                Step("1", "No PC, rode no terminal:", "claude setup-token")
-                Step("2", "Abra no navegador do PC:", st.panelUrl ?: "conecte o celular ao Wi-Fi...")
-                Step("3", "Crie um PIN e cole o token.", null)
+                Step("1", "Abra no navegador do PC:", st.panelUrl ?: "conecte o celular ao Wi-Fi...")
+                Step("2", "Crie um PIN.", null)
+                Step("3", "Rode no PowerShell o comando que aparece. O Claude Code passa a mandar o uso para cá.", null)
                 Spacer(Modifier.height(10.dp))
                 TextButton(onClick = { local = true }) {
-                    Text("Prefiro configurar aqui no celular", color = C.clawd, fontSize = 15.sp)
+                    Text("Prefiro criar o PIN aqui no celular", color = C.clawd, fontSize = 15.sp)
                 }
             }
         }
@@ -287,10 +286,8 @@ private fun Step(n: String, text: String, code: String?) {
 @Composable
 private fun SetupForm(repo: Repository, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
-    val clipboard = LocalClipboardManager.current
     var pin by remember { mutableStateOf("") }
     var pin2 by remember { mutableStateOf("") }
-    var token by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     Column(
@@ -300,14 +297,10 @@ private fun SetupForm(repo: Repository, onBack: () -> Unit) {
         Column(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
             TextButton(onClick = onBack) { Text("Voltar", color = C.muted) }
             Text("Configurar", color = C.text, fontSize = 28.sp, fontFamily = Fredoka, fontWeight = FontWeight.SemiBold)
-            Text("O token fica cifrado com AES-256-GCM e só abre com o PIN.", color = C.muted, fontSize = 14.sp)
+            Text("O PIN protege os ajustes e o painel web. Depois, conecte o Claude Code pelo painel no PC.", color = C.muted, fontSize = 14.sp)
             Spacer(Modifier.height(16.dp))
             SecretField(pin, { pin = it.filter(Char::isDigit).take(8) }, "PIN (4 a 8 dígitos)", numeric = true)
             SecretField(pin2, { pin2 = it.filter(Char::isDigit).take(8) }, "Repita o PIN", numeric = true)
-            SecretField(token, { token = it.trim() }, "Token (sk-ant-oat...)")
-            TextButton(onClick = { clipboard.getText()?.text?.trim()?.let { token = it } }) {
-                Text("Colar da área de transferência", color = C.clawd)
-            }
             Spacer(Modifier.height(8.dp))
             error?.let { Text(it, color = C.bad, fontSize = 14.sp); Spacer(Modifier.height(8.dp)) }
             Button(
@@ -321,13 +314,13 @@ private fun SetupForm(repo: Repository, onBack: () -> Unit) {
                     busy = true
                     error = null
                     scope.launch {
-                        val r = repo.provision(pin, token)
+                        val r = repo.provision(pin)
                         if (r is Repository.Outcome.Error) error = r.message
                         busy = false
                     }
                 },
             ) {
-                Text(if (busy) "Verificando com a API..." else "Verificar e salvar", fontWeight = FontWeight.SemiBold)
+                Text(if (busy) "Salvando..." else "Salvar", fontWeight = FontWeight.SemiBold)
             }
         }
     }

@@ -5,7 +5,7 @@ import org.junit.Test
 
 class FeelTest {
     private fun usage(p5: Double, p7: Double, fable: Double) =
-        UsageSnapshot(UsageWindow(p5, null), UsageWindow(p7, null), listOf(ScopedLimit("Fable", fable, null)), DataSource.USAGE, 1L)
+        UsageSnapshot(UsageWindow(p5, null), UsageWindow(p7, null), listOf(ScopedLimit("Fable", fable, null)), 1L)
 
     @Test
     fun generalLimitAtFullExhaustsEveryone() {
