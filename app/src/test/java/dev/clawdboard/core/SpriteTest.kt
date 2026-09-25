@@ -1,5 +1,6 @@
 package dev.clawdboard.core
 
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,5 +29,13 @@ class SpriteTest {
         val html = File("src/main/assets/panel.html").readText()
         val rows = Regex("const SPRITE = \\[(.*?)];", RegexOption.DOT_MATCHES_ALL).find(html)!!.groupValues[1]
         assertEquals(SPRITE.toList(), Regex("\"([^\"]*)\"").findAll(rows).map { it.groupValues[1] }.toList())
+    }
+
+    @Test
+    fun clawdOnlyShowsWhenUnlocked() {
+        assertEquals(Species.RACCOON, Prefs(species = Species.CLAWD).mascot())
+        assertEquals(Species.RACCOON, Prefs().merge(JSONObject().put("species", "CLAWD")).mascot())
+        assertEquals("RACCOON", lookJson(Prefs(species = Species.CLAWD)).getString("species"))
+        assertEquals(Species.CLAWD, Prefs(species = Species.CLAWD, clawdUnlocked = true).mascot())
     }
 }

@@ -83,7 +83,7 @@ fun ClawdboardApp(repo: Repository) {
         if (!st.unlocked || !st.provisioned) overlay = Overlay.NONE
     }
 
-    val look = remember(prefs.skin, prefs.tint, prefs.animations) { Look(prefs.skin, prefs.tint, prefs.animations) }
+    val look = remember(prefs.skin, prefs.tint, prefs.animations, prefs.mascot()) { Look(prefs.skin, prefs.tint, prefs.animations, prefs.mascot()) }
     CompositionLocalProvider(LocalNow provides now, LocalLook provides look, LocalDance provides dancing) {
         ClawdTheme {
             Box(

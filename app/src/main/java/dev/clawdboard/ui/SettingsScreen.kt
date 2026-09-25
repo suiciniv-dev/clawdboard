@@ -47,6 +47,7 @@ import dev.clawdboard.core.Prefs
 import dev.clawdboard.core.Repository
 import dev.clawdboard.core.ScreenMode
 import dev.clawdboard.core.Skin
+import dev.clawdboard.core.Species
 import dev.clawdboard.core.Tint
 import kotlinx.coroutines.launch
 
@@ -134,6 +135,12 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
 
             Section("Mascotes")
             MascotRow(st.status, Modifier.widthIn(max = 420.dp), usage = st.usage, mascotWidth = 72.dp)
+            if (prefs.clawdUnlocked) {
+                Label("Mascote")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Species.entries.forEach { m -> Chip(m.label, prefs.species == m) { repo.updateSettings { it.copy(species = m) } } }
+                }
+            }
             Label("Acessórios")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Skin.entries.forEach { s -> Chip(s.label, prefs.skin == s) { repo.updateSettings { it.copy(skin = s) } } }
@@ -222,7 +229,10 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                 }
             }
             Spacer(Modifier.height(10.dp))
-            Credit("Mascote", "Clawd é o mascote do Claude Code, da Anthropic")
+            Credit(
+                "Mascote",
+                if (prefs.mascot() == Species.CLAWD) "Clawd é o mascote do Claude Code, da Anthropic" else "Guaxinim em pixel art, feito para o Clawdboard",
+            )
             Credit("Dados", "Claude Code no PC, status.claude.com e o feed Olshansk/rss-feeds")
             Credit("Feedback", Nudge.EMAIL, C.clawd) { sendFeedback(context) }
             Hint("Projeto pessoal de fã, sem vínculo com a Anthropic.")

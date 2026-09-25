@@ -16,6 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.clawdboard.core.Brightness
 import dev.clawdboard.core.Orientation
 import dev.clawdboard.core.SelfTest
+import dev.clawdboard.core.Species
 import dev.clawdboard.core.enumOr
 import dev.clawdboard.ui.ClawdboardApp
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleDevIntent(i: Intent) {
+        if (i.hasExtra("clawd")) {
+            val on = i.getBooleanExtra("clawd", false)
+            repo.updateSettings { it.copy(clawdUnlocked = on, species = if (on) it.species else Species.RACCOON) }
+        }
         if (!i.getBooleanExtra("demo", false)) return
         val p5 = if (i.hasExtra("p5")) i.getIntExtra("p5", 37).toDouble() else 37.0
         val p7 = if (i.hasExtra("p7")) i.getIntExtra("p7", 64).toDouble() else 64.0

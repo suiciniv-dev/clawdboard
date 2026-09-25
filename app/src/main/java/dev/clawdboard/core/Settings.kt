@@ -12,6 +12,7 @@ enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto A
 enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
 enum class Orientation(val label: String) { LANDSCAPE("Paisagem"), PORTRAIT("Retrato"), AUTO("Automática") }
 enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"), CROWNS("Coroas"), XMAS("Natal") }
+enum class Species(val label: String) { RACCOON("Guaxinim"), CLAWD("Clawd") }
 enum class Tint(val label: String) { NATURAL("Natural"), RAINBOW("Arco-íris"), LAVENDER("Lavanda"), MINT("Menta"), BUBBLEGUM("Chiclete") }
 
 data class Prefs(
@@ -28,7 +29,11 @@ data class Prefs(
     val tint: Tint = Tint.NATURAL,
     val animations: Boolean = true,
     val music: Boolean = false,
+    val species: Species = Species.RACCOON,
+    val clawdUnlocked: Boolean = false,
 ) {
+    fun mascot() = if (clawdUnlocked) species else Species.RACCOON
+
     fun sanitized() = copy(
         dwellSec = dwellSec.coerceIn(5, 120),
         zoom = zoom.coerceIn(ZOOM_OPTIONS.first(), ZOOM_OPTIONS.last()),
@@ -41,6 +46,7 @@ data class Prefs(
         .put("backdrop", backdrop.name).put("zoom", zoom)
         .put("skin", skin.name).put("tint", tint.name).put("animations", animations)
         .put("music", music)
+        .put("species", species.name).put("clawdUnlocked", clawdUnlocked)
 
     fun merge(o: JSONObject): Prefs = copy(
         mode = enumOr(o.str("mode"), mode),
@@ -56,6 +62,8 @@ data class Prefs(
         tint = enumOr(o.str("tint"), tint),
         animations = if (o.has("animations")) o.optBoolean("animations", animations) else animations,
         music = if (o.has("music")) o.optBoolean("music", music) else music,
+        species = enumOr(o.str("species"), species),
+        clawdUnlocked = if (o.has("clawdUnlocked")) o.optBoolean("clawdUnlocked", clawdUnlocked) else clawdUnlocked,
     ).sanitized()
 
     companion object {

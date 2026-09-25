@@ -18,10 +18,10 @@ val SPRITE = arrayOf(
     ".BBBBBBBBBBBBBB.",
     ".BLLLLBBBBLLLLB.",
     ".MMMMMBBBBMMMMM.",
-    "BMMMMMMBBMMMMMMB",
-    "BBMMMMLLLLMMMMBB",
-    ".BBBLLLNNLLLBBB.",
-    ".bBBBLLLLLLBBBb.",
+    ".MMMMMMBBMMMMMM.",
+    ".BMMMMLLLLMMMMB.",
+    "BBBBLLLNNLLLBBBB",
+    "MbBBBLLLLLLBBBbM",
     "..bBBBBBBBBBBb..",
     "...MM......MM...",
 )
@@ -29,6 +29,8 @@ val EYE_COLS = intArrayOf(3, 11)
 val EAR_ROWS = 3..4
 val LEFT_EAR = 1..4
 val RIGHT_EAR = 11..14
+val ARM_ROWS = 10..11
+const val ARM_LIFT = 2
 
 const val FUR = 0xFFEEE7DB
 const val MASK = 0xFF4A413B
@@ -57,6 +59,7 @@ fun feelOf(usage: UsageSnapshot?, model: String): Feel {
 data class Px(val x: Int, val y: Int, val w: Int, val h: Int, val argb: Long)
 
 private const val GRAY = 0xFFA39B90
+private const val CORAL = 0xFFD77757
 private const val LAVENDER = 0xFFB9A6F2
 private const val MINT = 0xFF7CCBA2
 private const val PINK = 0xFFF59AC0
@@ -64,6 +67,7 @@ private const val PINK = 0xFFF59AC0
 private const val HAT = 0xFF3B3446
 private const val HAT_SHINE = 0xFF5A4F6B
 private const val GOLD = 0xFFF5D66A
+private const val FRAME = 0xFF1B1512
 private const val PHONES = 0xFF3F3A48
 private const val PHONES_SHINE = 0xFF7D7590
 private const val LEAF = 0xFF8FB573
@@ -85,8 +89,8 @@ fun accessoryFor(skin: Skin, model: String?): Accessory? = when (skin) {
     }
 }
 
-fun bodyArgb(tint: Tint, model: String?): Long = when (tint) {
-    Tint.NATURAL -> GRAY
+fun bodyArgb(tint: Tint, model: String?, species: Species = Species.RACCOON): Long = when (tint) {
+    Tint.NATURAL -> natural(species)
     Tint.LAVENDER -> LAVENDER
     Tint.MINT -> MINT
     Tint.BUBBLEGUM -> PINK
@@ -94,11 +98,30 @@ fun bodyArgb(tint: Tint, model: String?): Long = when (tint) {
         "Haiku" -> MINT
         "Sonnet" -> LAVENDER
         "Fable" -> PINK
-        else -> GRAY
+        else -> natural(species)
     }
 }
 
-fun accessoryPixels(a: Accessory): List<Px> = when (a) {
+private fun natural(species: Species) = if (species == Species.CLAWD) CORAL else GRAY
+
+fun accessoryPixels(a: Accessory, species: Species = Species.RACCOON): List<Px> =
+    if (species == Species.CLAWD) clawdAccessory(a) ?: raccoonAccessory(a) else raccoonAccessory(a)
+
+private fun clawdAccessory(a: Accessory): List<Px>? = when (a) {
+    Accessory.GLASSES -> listOf(4, 11).flatMap { e ->
+        listOf(Px(e - 1, 5, 3, 1, FRAME), Px(e - 1, 8, 3, 1, FRAME), Px(e - 1, 6, 1, 2, FRAME), Px(e + 1, 6, 1, 2, FRAME))
+    } + Px(6, 6, 4, 1, FRAME)
+    Accessory.HEADPHONES -> listOf(
+        Px(3, 2, 10, 1, PHONES), Px(2, 3, 1, 2, PHONES), Px(13, 3, 1, 2, PHONES),
+        Px(1, 5, 2, 3, PHONES), Px(13, 5, 2, 3, PHONES), Px(1, 6, 1, 1, PHONES_SHINE), Px(14, 6, 1, 1, PHONES_SHINE),
+    )
+    Accessory.SANTA -> listOf(
+        Px(4, 2, 8, 1, RED), Px(6, 1, 5, 1, RED), Px(9, 0, 3, 1, RED), Px(12, 0, 2, 2, WHITE), Px(3, 3, 10, 1, WHITE),
+    )
+    else -> null
+}
+
+private fun raccoonAccessory(a: Accessory): List<Px> = when (a) {
     Accessory.TOP_HAT -> listOf(
         Px(5, 0, 6, 2, HAT), Px(5, 0, 1, 2, HAT_SHINE), Px(5, 2, 6, 1, GOLD), Px(4, 3, 8, 1, HAT),
     )
@@ -126,14 +149,15 @@ fun accessoryPixels(a: Accessory): List<Px> = when (a) {
 private fun hex(argb: Long) = "#%06x".format(argb and 0xFFFFFF)
 
 fun lookJson(p: Prefs): JSONObject {
+    val species = p.mascot()
     val models = JSONObject()
     MODELS.forEach { m ->
         val acc = JSONArray()
         val a = accessoryFor(p.skin, m)
-        a?.let { accessoryPixels(it).forEach { px -> acc.put(JSONArray().put(px.x).put(px.y).put(px.w).put(px.h).put(hex(px.argb))) } }
-        models.put(m, JSONObject().put("body", hex(bodyArgb(p.tint, m))).put("acc", acc).put("kind", a?.name ?: JSONObject.NULL))
+        a?.let { accessoryPixels(it, species).forEach { px -> acc.put(JSONArray().put(px.x).put(px.y).put(px.w).put(px.h).put(hex(px.argb))) } }
+        models.put(m, JSONObject().put("body", hex(bodyArgb(p.tint, m, species))).put("acc", acc).put("kind", a?.name ?: JSONObject.NULL))
     }
-    return JSONObject().put("top", LOOK_TOP).put("rows", LOOK_ROWS).put("models", models).put("animations", p.animations)
+    return JSONObject().put("top", LOOK_TOP).put("rows", LOOK_ROWS).put("species", species.name).put("models", models).put("animations", p.animations)
 }
 
 fun mascotsJson(usage: UsageSnapshot?, status: StatusSnapshot?): JSONArray {

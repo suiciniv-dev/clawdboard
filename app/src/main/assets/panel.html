@@ -96,19 +96,21 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 .cl .la{animation:legA 9s step-end infinite;animation-delay:var(--d)}
 .cl .lb{animation:legB 9s step-end infinite;animation-delay:var(--d)}
 .cl .arm{animation:wave 13s step-end infinite;animation-delay:var(--d)}
+.cl .paw{animation:wave2 13s step-end infinite;animation-delay:var(--d)}
 .cl .bod{animation:crouch 10s step-end infinite;animation-delay:var(--d)}
 .cl .drop{animation:drip 2.2s step-end infinite;animation-delay:var(--d)}
 .cl .z{animation:zz 2.9s step-end infinite;animation-delay:var(--d)}
 .cl .smoke{animation:puff 2.6s step-end infinite;animation-delay:var(--d)}
 .cl.hot{animation:throb .76s ease-in-out infinite}
 .cl.shake .all{animation:shake 1.2s step-end infinite}
-.cl.nolook .eyes,.cl.sleepy .la,.cl.sleepy .lb,.cl.sleepy .arm,.cl.dead .bod,.cl.dead .la,.cl.dead .lb,.cl.dead .arm{animation:none}
+.cl.nolook .eyes,.cl.sleepy .la,.cl.sleepy .lb,.cl.sleepy .arm,.cl.sleepy .paw,.cl.dead .bod,.cl.dead .la,.cl.dead .lb,.cl.dead .arm,.cl.dead .paw{animation:none}
 .cl.sleepy .bod{animation:breathe 2.9s step-end infinite;animation-delay:var(--d)}
 .cl .note{opacity:0}
 .cl.dance .bod{animation:bounce .5s step-end infinite}
 .cl.dance .la{animation:hopA 1s step-end infinite}
 .cl.dance .lb{animation:hopB 1s step-end infinite}
 .cl.dance .arm{animation:armUp 1s step-end infinite}
+.cl.dance .paw{animation:armUp2 1s step-end infinite}
 .cl.dance .nl{animation:noteL 2s step-end infinite}
 .cl.dance .nr{animation:noteR 2s step-end infinite}
 .cl.tap .lb{animation:tap .5s step-end infinite}
@@ -128,6 +130,8 @@ code{background:var(--card2);padding:2px 7px;border-radius:6px;color:var(--clawd
 @keyframes hopA{0%{transform:none}50%{transform:translateY(-1px)}75%{transform:none}}
 @keyframes hopB{0%{transform:none}75%{transform:translateY(-1px)}}
 @keyframes armUp{0%{transform:translateY(-1px)}50%{transform:none}}
+@keyframes wave2{0%{transform:none}60%{transform:translateY(-2px)}62%{transform:none}64%{transform:translateY(-2px)}66%{transform:none}68%{transform:translateY(-2px)}70%{transform:none}}
+@keyframes armUp2{0%{transform:translateY(-2px)}50%{transform:none}}
 @keyframes noteL{0%{opacity:1;transform:translateY(1px)}25%{transform:none}50%{opacity:0}}
 @keyframes noteR{0%{opacity:0}50%{opacity:1;transform:translateY(1px)}75%{transform:none}}
 @keyframes tap{0%{transform:translateY(-1px)}50%{transform:none}}
@@ -276,10 +280,10 @@ const SPRITE = [
   ".BBBBBBBBBBBBBB.",
   ".BLLLLBBBBLLLLB.",
   ".MMMMMBBBBMMMMM.",
-  "BMMMMMMBBMMMMMMB",
-  "BBMMMMLLLLMMMMBB",
-  ".BBBLLLNNLLLBBB.",
-  ".bBBBLLLLLLBBBb.",
+  ".MMMMMMBBMMMMMM.",
+  ".BMMMMLLLLMMMMB.",
+  "BBBBLLLNNLLLBBBB",
+  "MbBBBLLLLLLBBBbM",
   "..bBBBBBBBBBBb..",
   "...MM......MM...",
 ];
@@ -289,8 +293,41 @@ function mix(a, b, t){
   const x = p(a), y = p(b);
   return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("");
 }
+function clawdSprite(model, m, i){
+  const lk = state && state.look, def = model && lk ? lk.models[model] : null;
+  const T = def ? lk.top : 0;
+  const down = !!(m && m.down), out = !!(m && !down && m.mood === "EXHAUSTED");
+  const dancing = !!(m && !down && state && state.music && state.music.playing);
+  const sleepy = !!(m && !down && !out && !dancing && m.mood === "SLEEPY");
+  const sweaty = !!(m && !down && !out && m.mood === "SWEATY");
+  const heat = m && !down && !out ? m.heat : 0;
+  const base = def ? def.body : "#d77757";
+  const body = down ? "#5a5247" : out ? "#4e3530" : heat > 0 ? mix(base, "#ff3b2f", heat) : base;
+  const r = (x, y, w, h, extra = "") => `<rect x="${x}" y="${y}" width="${w + .04}" height="${h + .04}"${extra}/>`;
+  const torso = r(2, T, 12, 2) + r(2, T + 2, 12, 2) + r(2, T + 4, 12, 2) + r(2, T + 6, 12, 2);
+  const left = r(0, T + 4, 2, 2), right = r(14, T + 4, 2, 2);
+  const arms = i % 2 ? left + `<g class="arm">${right}</g>` : `<g class="arm">${left}</g>` + right;
+  let eyes;
+  if (down || out) eyes = [4, 11].map(c => `<path d="M${c - .45} ${T + 2.25}L${c + 1.45} ${T + 3.75}M${c - .45} ${T + 3.75}L${c + 1.45} ${T + 2.25}" stroke="${EYE}" stroke-width=".5" fill="none"/>`).join("");
+  else if (sleepy) eyes = [4, 11].map(c => r(c, T + 3.2, 1, .4, ` fill="${EYE}"`)).join("");
+  else eyes = `<g class="eyes">${[4, 11].map(c => r(c, T + 2, 1, 2, ` fill="${EYE}"`) + r(c, T + 2, 1, 2, ` class="lid"`)).join("")}</g>`;
+  const acc = def ? def.acc.map(([x, y, w, h, c]) => r(x, y, w, h, ` fill="${c}"`)).join("") : "";
+  const legs = `<g class="la">${r(3, T + 8, 1, 2)}${r(10, T + 8, 1, 2)}</g><g class="lb">${r(5, T + 8, 1, 2)}${r(12, T + 8, 1, 2)}</g>`;
+  let extra = "";
+  if (sweaty) extra += r(14, 3, 1, 2, ` class="drop" fill="#8fd3f4"`);
+  if (sleepy) extra += `<g class="z" fill="#a89a86">${r(13, 0, 3, 1)}${r(15, 1, 1, 1)}${r(14, 2, 1, 1)}${r(13, 3, 3, 1)}</g>`;
+  if (out) extra += `<g class="smoke" fill="#8a8078">${r(7, 3, 1, 1)}${r(8, 2, 1, 1, ` opacity=".6"`)}</g>`;
+  if (dancing && !out) {
+    const note = x => `${r(x + 1, 0, 2, 1)}${r(x + 1, 1, 1, 1)}${r(x, 2, 2, 1)}`;
+    extra += `<g class="note ${i % 2 ? "nl" : "nr"}" fill="#b9a6f2">${note(i % 2 ? 0 : 13)}</g><g class="note ${i % 2 ? "nr" : "nl"}" fill="#b9a6f2">${note(i % 2 ? 13 : 0)}</g>`;
+  }
+  const cls = ["cl", sleepy && "sleepy", heat > 0 && "hot", heat >= .5 && !dancing && "shake", def && def.kind === "GLASSES" && "nolook", (down || out) && "dead", dancing && !out && "dance", dancing && out && "tap"].filter(Boolean).join(" ");
+  const style = `--d:${-(i * 2.3 + .7).toFixed(1)}s;--lx:${i % 2 ? -1 : 1}px`;
+  return `<svg class="${cls}" style="${style}" viewBox="0 0 16 ${T + 10}" fill="${body}" aria-hidden="true"><g class="all"><g class="bod">${torso}${arms}${eyes}${acc}</g>${legs}${extra}</g></svg>`;
+}
 function sprite(model, m, i){
   const lk = state && state.look, def = model && lk ? lk.models[model] : null;
+  if (lk && lk.species === "CLAWD") return clawdSprite(model, m, i);
   const down = !!(m && m.down), out = !!(m && !down && m.mood === "EXHAUSTED");
   const dancing = !!(m && !down && state && state.music && state.music.playing);
   const sleepy = !!(m && !down && !out && !dancing && m.mood === "SLEEPY");
@@ -302,17 +339,19 @@ function sprite(model, m, i){
   const mask = down ? "#3a342e" : out ? "#2a1f1c" : MASK;
   const paint = {B: body, b: mix(body, "#000000", .24), L: fur, M: mask, N: NOSE};
   const r = (x, y, w, h, extra = "") => `<rect x="${x}" y="${y}" width="${w + .04}" height="${h + .04}"${extra}/>`;
-  let torso = "", earL = "", earR = "", footL = "", footR = "";
+  let torso = "", earL = "", earR = "", pawL = "", pawR = "", footL = "", footR = "";
   SPRITE.forEach((row, y) => [...row].forEach((ch, x) => {
     if (ch === ".") return;
     const cell = r(x, y, 1, 1, ` fill="${paint[ch]}"`);
     const ear = y >= 3 && y <= 4;
     if (y === SPRITE.length - 1) { if (x < 8) footL += cell; else footR += cell; }
+    else if (y >= 10 && y <= 11 && x === 0) pawL += cell;
+    else if (y >= 10 && y <= 11 && x === 15) pawR += cell;
     else if (ear && x >= 1 && x <= 4) { earL += cell; if (y === 4) torso += cell; }
     else if (ear && x >= 11 && x <= 14) { earR += cell; if (y === 4) torso += cell; }
     else torso += cell;
   }));
-  const ears = i % 2 ? earL + `<g class="arm">${earR}</g>` : `<g class="arm">${earL}</g>` + earR;
+  const ears = i % 2 ? earL + pawL + `<g class="arm">${earR}</g><g class="paw">${pawR}</g>` : `<g class="arm">${earL}</g><g class="paw">${pawL}</g>` + earR + pawR;
   let eyes;
   if (down || out) eyes = EYE_COLS.map(c => `<path d="M${c + .05} ${EYE_ROW + .05}L${c + 1.95} ${EYE_ROW + 1.95}M${c + .05} ${EYE_ROW + 1.95}L${c + 1.95} ${EYE_ROW + .05}" stroke="${XEYE}" stroke-width=".45" fill="none" shape-rendering="geometricPrecision"/>`).join("");
   else if (sleepy) eyes = EYE_COLS.map(c => r(c, EYE_ROW + 1.6, 2, .4, ` fill="${EYE}"`)).join("");

@@ -15,6 +15,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
+import dev.clawdboard.core.ARM_LIFT
+import dev.clawdboard.core.ARM_ROWS
 import dev.clawdboard.core.Accessory
 import dev.clawdboard.core.EAR_ROWS
 import dev.clawdboard.core.EYE_COLS
@@ -24,6 +26,7 @@ import dev.clawdboard.core.FUR
 import dev.clawdboard.core.Feel
 import dev.clawdboard.core.LEFT_EAR
 import dev.clawdboard.core.LOOK_ROWS
+import dev.clawdboard.core.LOOK_TOP
 import dev.clawdboard.core.MASK
 import dev.clawdboard.core.Mood
 import dev.clawdboard.core.NOSE
@@ -31,6 +34,7 @@ import dev.clawdboard.core.RIGHT_EAR
 import dev.clawdboard.core.SPRITE
 import dev.clawdboard.core.SPRITE_TOP
 import dev.clawdboard.core.Skin
+import dev.clawdboard.core.Species
 import dev.clawdboard.core.Tint
 import dev.clawdboard.core.accessoryFor
 import dev.clawdboard.core.accessoryPixels
@@ -57,12 +61,27 @@ private val SMOKE = Color(0xFF8A8078)
 private val NOTE = Color(0xFFB9A6F2)
 private const val BEAT = 500L
 
+private val CLAWD_BODY = arrayOf(
+    "..############..",
+    "..##E######E##..",
+    "################",
+    "..############..",
+    "...#.#....#.#...",
+)
+private val CLAWD_EYES = intArrayOf(4, 11)
+private val CLAWD_LEGS = intArrayOf(3, 5, 10, 12)
+
 private val SPARKS_NEAR = listOf(1 to 3, 14 to 3, 0 to 7, 15 to 7, 2 to 13, 13 to 13, 7 to 1, 9 to 2)
 private val SPARKS_FAR = listOf(0 to 0, 15 to 0, 0 to 12, 15 to 12, 4 to 0, 11 to 1, 6 to 13, 10 to 13)
 
 const val MASCOT_ASPECT = 16f / LOOK_ROWS
 
-data class Look(val skin: Skin = Skin.MODELS, val tint: Tint = Tint.NATURAL, val animations: Boolean = true)
+data class Look(
+    val skin: Skin = Skin.MODELS,
+    val tint: Tint = Tint.NATURAL,
+    val animations: Boolean = true,
+    val species: Species = Species.RACCOON,
+)
 
 val LocalLook = compositionLocalOf { Look() }
 
@@ -261,10 +280,12 @@ fun Mascot(
         }
     }
 
-    val base = Color(bodyArgb(look.tint, model))
-    Canvas(modifier.aspectRatio(if (reserveTop) MASCOT_ASPECT else 16f / (LOOK_ROWS - SPRITE_TOP))) {
+    val clawd = look.species == Species.CLAWD
+    val top = if (clawd) LOOK_TOP else SPRITE_TOP
+    val base = Color(bodyArgb(look.tint, model, look.species))
+    Canvas(modifier.aspectRatio(if (reserveTop) MASCOT_ASPECT else 16f / (LOOK_ROWS - top))) {
         val u = size.width / 16f
-        val oy = if (reserveTop) 0f else -SPRITE_TOP * u
+        val oy = if (reserveTop) 0f else -top * u
         val p = pose
         val ox = p.shake * 0.5f * u
         val dy = p.dy
@@ -302,7 +323,26 @@ fun Mascot(
             drawRect(c, Offset(ox + x * u, oy + y * u), Size(w * u + 0.6f, h * u + 0.6f))
         fun rect(x: Int, y: Int, w: Int, h: Int, c: Color) = rect(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), c)
 
-        SPRITE.forEachIndexed { r, row ->
+        if (clawd) CLAWD_BODY.forEachIndexed { r, row ->
+            val y = LOOK_TOP + r * 2
+            val footLeg = when (p.foot) { 1 -> 0; 2 -> 3; else -> -1 }
+            row.forEachIndexed { c, ch ->
+                if (ch == '.') return@forEachIndexed
+                when {
+                    r == 4 -> {
+                        val leg = CLAWD_LEGS.indexOf(c)
+                        val lifted = (p.legs == 1 && leg % 2 == 0) || (p.legs == 2 && leg % 2 == 1) || leg == footLeg
+                        when {
+                            dy > 0 -> rect(c, y + 1, 1, 1, body)
+                            lifted -> rect(c, y, 1, 1, body)
+                            else -> rect(c, y, 1, 2, body)
+                        }
+                    }
+                    r == 2 && ((p.arm < 0 && c <= 1) || (p.arm > 0 && c >= 14)) -> rect(c, y - 1 + dy, 1, 2, body)
+                    else -> rect(c, y + dy, 1, 2, body)
+                }
+            }
+        } else SPRITE.forEachIndexed { r, row ->
             row.forEachIndexed { c, ch ->
                 if (ch == '.') return@forEachIndexed
                 val color = paint(ch)
@@ -315,6 +355,7 @@ fun Mascot(
                             else -> rect(c, r, 1, 1, color)
                         }
                     }
+                    r in ARM_ROWS && ((p.arm < 0 && c == 0) || (p.arm > 0 && c == 15)) -> rect(c, r - ARM_LIFT + dy, 1, 1, color)
                     r in EAR_ROWS && ((p.arm < 0 && c in LEFT_EAR) || (p.arm > 0 && c in RIGHT_EAR)) -> {
                         rect(c, r - 1 + dy, 1, 1, color)
                         if (r == EAR_ROWS.last) rect(c, r + dy, 1, 1, color)
@@ -324,31 +365,51 @@ fun Mascot(
             }
         }
 
-        val eyeY = EYE_ROW + dy
-        if (alive && !out) {
-            EYE_COLS.forEach { e ->
-                val x = (e + p.look).toFloat()
-                if (blink || sleepy) {
-                    rect(x, eyeY + 1.6f, 2f, 0.4f, C.eye)
-                } else {
-                    rect(x, eyeY.toFloat(), 2f, 2f, C.eye)
-                    rect(x, eyeY.toFloat(), 1f, 1f, SHINE)
+        if (clawd) {
+            val eyeY = LOOK_TOP + 2 + dy
+            if (alive && !out) {
+                CLAWD_EYES.forEach { e ->
+                    val x = (e + p.look).toFloat()
+                    if (blink || sleepy) rect(x, eyeY + 1.2f, 1f, 0.4f, C.eye) else rect(x, eyeY.toFloat(), 1f, 2f, C.eye)
+                }
+            } else {
+                val stroke = u * 0.5f
+                CLAWD_EYES.forEach { col ->
+                    val cx = ox + (col + 0.5f) * u
+                    val cy = oy + (eyeY + 1) * u
+                    val hw = u * 0.95f
+                    val hh = u * 1.24f
+                    drawLine(C.eye, Offset(cx - hw, cy - hh), Offset(cx + hw, cy + hh), stroke, StrokeCap.Square)
+                    drawLine(C.eye, Offset(cx - hw, cy + hh), Offset(cx + hw, cy - hh), stroke, StrokeCap.Square)
                 }
             }
         } else {
-            val stroke = u * 0.45f
-            EYE_COLS.forEach { col ->
-                val cx = ox + (col + 1f) * u
-                val cy = oy + (eyeY + 1f) * u
-                val hw = u * 0.95f
-                drawLine(X_EYE, Offset(cx - hw, cy - hw), Offset(cx + hw, cy + hw), stroke, StrokeCap.Square)
-                drawLine(X_EYE, Offset(cx - hw, cy + hw), Offset(cx + hw, cy - hw), stroke, StrokeCap.Square)
+            val eyeY = EYE_ROW + dy
+            if (alive && !out) {
+                EYE_COLS.forEach { e ->
+                    val x = (e + p.look).toFloat()
+                    if (blink || sleepy) {
+                        rect(x, eyeY + 1.6f, 2f, 0.4f, C.eye)
+                    } else {
+                        rect(x, eyeY.toFloat(), 2f, 2f, C.eye)
+                        rect(x, eyeY.toFloat(), 1f, 1f, SHINE)
+                    }
+                }
+            } else {
+                val stroke = u * 0.45f
+                EYE_COLS.forEach { col ->
+                    val cx = ox + (col + 1f) * u
+                    val cy = oy + (eyeY + 1f) * u
+                    val hw = u * 0.95f
+                    drawLine(X_EYE, Offset(cx - hw, cy - hw), Offset(cx + hw, cy + hw), stroke, StrokeCap.Square)
+                    drawLine(X_EYE, Offset(cx - hw, cy + hw), Offset(cx + hw, cy - hw), stroke, StrokeCap.Square)
+                }
             }
         }
 
-        acc?.let { a -> accessoryPixels(a).forEach { rect(it.x, it.y + dy, it.w, it.h, Color(it.argb)) } }
+        acc?.let { a -> accessoryPixels(a, look.species).forEach { rect(it.x, it.y + dy, it.w, it.h, Color(it.argb)) } }
 
-        if (p.drop >= 0) rect(15, p.drop + dy, 1, 2, SWEAT)
+        if (p.drop >= 0) rect(if (clawd) 14 else 15, p.drop + dy, 1, 2, SWEAT)
         if (p.note != 0) {
             val nx = if (p.note > 0) 13 else 0
             val ny = p.noteDy

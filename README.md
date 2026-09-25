@@ -1,9 +1,9 @@
-# 🦞 Clawdboard
+# 🦝 Clawdboard
 
 **Turn an old Android phone into a Claude Code usage monitor.**
 
 <p align="center">
-  <img src="prints/1.4.1/hero.gif" width="760" alt="Clawds sleeping with an empty session, waking up, turning red near the limit, bursting at 100% and dancing when music plays">
+  <img src="prints/1.6.0/hero.gif" width="760" alt="Raccoons sleeping with an empty session, waking up, turning red near the limit, bursting at 100% and dancing when music plays">
 </p>
 
 <p align="center">
@@ -19,14 +19,14 @@
 
 Clawdboard is an always-on desk display for your Claude usage, made for that old Android phone sitting in a drawer.
 It shows how much of the 5-hour session and of the week you have used, when each one resets and whether any model has
-an open incident. The models appear as pixel-art Clawds that sleep, sweat, burst at 100% and dance when music plays.
+an open incident. The models appear as pixel-art raccoons that sleep, sweat, burst at 100% and dance when music plays.
 
 ## ✨ Features
 
 - 📊 **Usage at a glance**: 5-hour session and 7-day week, with a countdown and the local time each one resets
-- 🦞 **Animated Clawds**: Haiku, Sonnet, Opus and Fable blink, sleep when the session is empty, sweat from 85%, turn red from 90% and burst at 100%
+- 🦝 **Animated raccoons**: Haiku, Sonnet, Opus and Fable blink, wave, sleep when the session is empty, sweat from 85%, turn red from 90% and burst at 100%
 - 🔌 **No token on the phone**: the numbers come from Claude Code's own `/usage` on your PC, over the local network
-- 🎵 **Music mode**: whatever plays on the phone (Spotify, YouTube Music or any player), with cover, controls and volume, while the Clawds dance on every screen
+- 🎵 **Music mode**: whatever plays on the phone (Spotify, YouTube Music or any player), with cover, controls and volume, while the raccoons dance on every screen
 - 📈 **7-day history**: one sample every 30 minutes
 - 🖥️ **Web dashboard**: the same view in your PC browser, on the local network, with PIN login
 - 🚦 **Status and news**: open incidents from status.claude.com and the latest Anthropic news
@@ -41,37 +41,37 @@ The app's interface is in Brazilian Portuguese.
 
 | | | |
 |---|---|---|
-| <img src="prints/1.2.0/09-zoom150-painel.png" alt="Dashboard"> | <img src="prints/1.2.0/01-skins-por-modelo.png" alt="Mascots screen"> | <img src="prints/1.2.0/13-zoom150-retrato-relogio.png" alt="Desk clock in portrait"> |
+| <img src="prints/1.6.0/01-painel.png" alt="Dashboard"> | <img src="prints/1.6.0/02-mascotes.png" alt="Mascots screen"> | <img src="prints/1.6.0/03-relogio-retrato.png" alt="Desk clock in portrait"> |
 | Dashboard | Mascots | Desk clock |
 
-### Clawd reactions
+### Raccoon reactions
 
 | | | |
 |---|---|---|
-| <img src="prints/1.2.0/04-coroas-dormindo-sessao-0.png" alt="Clawds sleeping"> | <img src="prints/1.2.0/05-suando-88.png" alt="Clawds sweating at 88%"> | <img src="prints/1.2.0/06-esquentando-97.png" alt="Clawds red at 97%"> |
+| <img src="prints/1.6.0/04-dormindo.png" alt="Raccoons sleeping"> | <img src="prints/1.6.0/05-suando-88.png" alt="Raccoons sweating at 88%"> | <img src="prints/1.6.0/06-esquentando-97.png" alt="Raccoons red at 97%"> |
 | Empty session: asleep | 88%: sweating | 97%: red and shaking |
-| <img src="prints/1.2.0/07-todos-esgotados-100.png" alt="All Clawds burst at 100%"> | <img src="prints/1.2.0/08-so-fable-esgotado.png" alt="Only Fable burst"> | <img src="prints/1.4.0/03-mascotes-dancando.png" alt="Clawds dancing"> |
+| <img src="prints/1.6.0/07-esgotados-100.png" alt="All raccoons burst at 100%"> | <img src="prints/1.6.0/08-so-fable-esgotado.png" alt="Only Fable burst"> | <img src="prints/1.6.0/09-dancando.png" alt="Raccoons dancing"> |
 | 100%: burst | Fable's own limit at 100%: only Fable bursts | Music playing: dancing |
 
 ### Music mode
 
 | | |
 |---|---|
-| <img src="prints/1.4.0/01-musica-paisagem.png" alt="Music screen in landscape"> | <img src="prints/1.4.0/02-musica-retrato.png" width="300" alt="Music screen in portrait"> |
+| <img src="prints/1.6.0/10-musica-paisagem.png" alt="Music screen in landscape"> | <img src="prints/1.6.0/11-musica-retrato.png" width="300" alt="Music screen in portrait"> |
 | Cover, track, controls and volume | Portrait |
 
 ### Skins and settings
 
 | | | |
 |---|---|---|
-| <img src="prints/1.2.0/02-skins-arco-iris.png" alt="Rainbow colors"> | <img src="prints/1.2.0/03-skins-natal.png" alt="Christmas skin"> | <img src="prints/1.4.1/02-ajustes.png" alt="Mascot settings"> |
+| <img src="prints/1.6.0/12-arco-iris.png" alt="Rainbow colors"> | <img src="prints/1.6.0/13-natal.png" alt="Christmas skin"> | <img src="prints/1.6.0/14-ajustes.png" alt="Mascot settings"> |
 | One color per model | Christmas skin | Settings, at 150% zoom |
 
 ### Web dashboard and AMOLED
 
 | | |
 |---|---|
-| <img src="prints/1.3.0/01-painel-pc.png" alt="Web dashboard on a PC"> | <img src="prints/1.4.1/01-amoled.png" alt="Dashboard in AMOLED black"> |
+| <img src="prints/1.6.0/15-painel-pc.png" alt="Web dashboard on a PC"> | <img src="prints/1.6.0/16-amoled.png" alt="Dashboard in AMOLED black"> |
 | Web dashboard in the PC browser | AMOLED black |
 
 ## 🚀 Quick Start
@@ -111,7 +111,7 @@ The app's interface is in Brazilian Portuguese.
  │  Android phone   │ ──► status.claude.com    open incidents
  │   Clawdboard     │ ──► public RSS feed      Anthropic news
  └──────────────────┘
-          ├──► 🦞 Clawds on the phone screen
+          ├──► 🦝 raccoons on the phone screen
           └──► web dashboard on your local network (http://PHONE-IP:8080)
 
  Music mode reads and controls the phone's own media session. No account involved.
@@ -136,7 +136,7 @@ reset time passes without a new push, the phone drops it to 0% on its own.
 30 seconds. The gear in the bottom right corner opens the settings after asking for the PIN. After a reboot or an app restart
 the screen asks for the PIN again, and you can unlock it from the web dashboard. The footer shows when the last push arrived.
 
-**Screens and modes.** Dashboard, mascots (session and week on top, the four Clawds below), 7-day chart, news, desk clock and
+**Screens and modes.** Dashboard, mascots (session and week on top, the four raccoons below), 7-day chart, news, desk clock and
 music (when enabled). Screen modes: static, mascots, carousel or clock. In the carousel the music screen only shows up while
 something is playing.
 
@@ -144,20 +144,20 @@ something is playing.
 The other models draw from the general weekly limit, so they show that value in gray.
 
 **Skins.** "Por modelo" (the default) puts a top hat on Fable, the most expensive one, glasses on Opus, headphones on Sonnet and
-a sprout on Haiku. There are also "Clássico" (no accessory), "Coroas" and "Natal", and five colors: coral, rainbow (one per model),
+a sprout on Haiku. There are also "Clássico" (no accessory), "Coroas" and "Natal", and five colors: natural (the raccoon's gray), rainbow (one per model),
 lavender, mint and bubblegum. The web dashboard draws the same skin from the definition the app sends in `state.look`.
 
-**Animations.** Besides blinking, they look around, move their legs, wave and crouch. With the 5-hour session at zero they sleep
+**Animations.** Besides blinking, they look around, move their legs, wave, twitch their ears and crouch. With the 5-hour session at zero they sleep
 (eyes closed and a Z). From 85% they sweat and get restless; from 90% they turn red and throb, and from 95% they shake. At 100% they
 burst and stay charred, with X eyes and smoke, marked "esgotado". Session or general week at 100% bursts all four; Fable's own
-limit at 100% bursts only Fable. An open incident on status.claude.com that names a model turns its Clawd gray with X eyes.
+limit at 100% bursts only Fable. An open incident on status.claude.com that names a model turns its raccoon gray with X eyes.
 Animations can be turned off in the settings.
 
 **Music.** Settings → Música → "Tela de música", then "Liberar acesso" and allow Clawdboard. Clawdboard plays nothing itself: it reads
 and controls the player of the app that is playing, through Android's media session. The screen shows the album cover, the track,
 the icon of the app (one tap opens its player, to change playlists), the progress bar, the buttons, the app's extra buttons and the
 volume: the phone's media volume or, when the app sends the sound to another device, that device's volume. While music plays, every
-Clawd dances on every screen, the web dashboard included: sleepy ones wake up, sweaty ones dance sweating and burst ones tap a foot.
+raccoon dances on every screen, the web dashboard included: sleepy ones wake up, sweaty ones dance sweating and burst ones tap a foot.
 On an APK installed through a browser or file manager, Android 13 and later may say it is a "restricted setting". In that case:
 Settings → Apps → Clawdboard → ⋮ → Allow restricted settings, and try again.
 
@@ -212,7 +212,7 @@ Diagnostics over ADB:
 adb shell am start -n dev.clawdboard.preview/dev.clawdboard.MainActivity --ez demo true --es mode MASCOTS --es orient PORTRAIT
 # demo: sample data, only works before a PIN is created; mode, orient and backdrop are optional
 # also: --ei zoom 150, --es skin XMAS, --es tint RAINBOW, --ei p5 0 (empty session, asleep), --ei p7 97 (red), --ez nudge true (feedback card)
-# --ez music true turns on the music screen with a sample track playing (Clawds dancing); --ez playing false leaves it paused
+# --ez music true turns on the music screen with a sample track playing (raccoons dancing); --ez playing false leaves it paused
 adb shell am start -n dev.clawdboard/.MainActivity --ez selftest true  # tests the vault on the device
 adb logcat -s ClawdSelfTest
 ```
@@ -220,7 +220,7 @@ adb logcat -s ClawdSelfTest
 ### Architecture
 
 - `core/`: pairing and push, vault, history, settings, music (Android media session) and the web dashboard server
-- `ui/`: Jetpack Compose screens and the pixel-art Clawd
+- `ui/`: Jetpack Compose screens and the pixel-art raccoon
 - `MediaListener.kt`: the notification listener Android requires to see the active player
 - `assets/panel.html`: the web dashboard, with no external dependencies
 - `assets/pc/`: the PowerShell installer and the usage hook the phone serves to your PC
