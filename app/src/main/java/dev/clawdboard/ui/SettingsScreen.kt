@@ -96,7 +96,7 @@ fun SettingsScreen(repo: Repository, st: Repository.State, prefs: Prefs, onClose
                 when (prefs.source) {
                     DataSource.AUTO -> "Tenta o endpoint de uso e cai para a sondagem se o token não tiver permissão."
                     DataSource.USAGE -> "Endpoint interno /api/oauth/usage. Não gasta requisição, mas não é documentado."
-                    DataSource.PROBE -> "Envia uma mensagem de 1 token ao Haiku e lê os headers de limite, como o stick."
+                    DataSource.PROBE -> "Envia uma mensagem de 1 token ao Haiku e lê os headers de limite."
                 }
             )
 

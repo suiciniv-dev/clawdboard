@@ -1,7 +1,6 @@
 # Clawdboard
 
-Painel de uso do Claude para um celular Android parado na mesa. É a versão para celular do
-[claude-usage-stick](https://github.com/oauramos/claude-usage-stick), que roda em placas ESP32.
+Painel de uso do Claude para um celular Android parado na mesa.
 
 Deixe um celular Android velho na mesa e ele vira um painel sempre ligado: quanto da sessão de 5 horas e da semana você
 já usou, quanto falta para liberar, se algum modelo está com problema no status.claude.com e as últimas notícias da Anthropic.
@@ -80,7 +79,7 @@ Zoom de acessibilidade: 90, 100, 115, 130 ou 150% nas telas e nos ajustes. Bloqu
 Quando o lado menor da tela fica abaixo de 380dp (zoom alto ou celular pequeno), as telas entram em modo compacto e escondem
 linhas secundárias ("libera em", endereço do painel, "instável"); o limite do Fable sobe para o lugar do subtítulo da semana.
 
-Fundo: "Tom do stick" usa a paleta do site do claude-usage-stick (#16130f com brilho coral no rodapé). "Preto AMOLED" economiza mais tela.
+Fundo: "Tema padrão" usa tons escuros e quentes (#16130f com brilho coral no rodapé). "Preto AMOLED" economiza mais tela.
 
 Feedback: depois de 3 dias de uso aparece um cartão perguntando se a pessoa está gostando, com botão que abre um e-mail para vinips00@gmail.com. Some sozinho em 30 s, volta a cada 10 dias e tem "Não mostrar mais". Depois de mandar e-mail, só volta em 60 dias. O mesmo contato fica nos créditos dos ajustes e no rodapé do painel web.
 
@@ -90,7 +89,7 @@ contra marcas na tela AMOLED, abertura automática no boot e exibição por cima
 ## De onde vêm os dados
 
 - **Endpoint de uso** `GET https://api.anthropic.com/api/oauth/usage`. Devolve JSON com percentual de 0 a 100. Não gasta requisição, mas não é documentado e pode mudar.
-- **Sondagem** `POST https://api.anthropic.com/v1/messages` com Haiku e `max_tokens: 1`. Lê os headers `anthropic-ratelimit-unified-5h-*` e `-7d-*`. É o que o stick faz. Gasta uma requisição mínima por consulta.
+- **Sondagem** `POST https://api.anthropic.com/v1/messages` com Haiku e `max_tokens: 1`. Lê os headers `anthropic-ratelimit-unified-5h-*` e `-7d-*`. Gasta uma requisição mínima por consulta.
 - **Automático** tenta o endpoint de uso e cai para a sondagem se o token não tiver permissão ou for limitado.
   Com o token do `claude setup-token` o endpoint responde 403 (falta o escopo `user:profile`), então na prática o app usa a sondagem.
   O rodapé mostra o motivo, por exemplo `sondagem (uso: HTTP 403)`. O limite por modelo que veio do endpoint fica valendo

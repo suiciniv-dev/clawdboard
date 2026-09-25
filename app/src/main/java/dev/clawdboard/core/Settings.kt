@@ -9,7 +9,7 @@ import org.json.JSONObject
 
 enum class DataSource(val label: String) { AUTO("Automático"), USAGE("Endpoint de uso"), PROBE("Sondagem") }
 enum class ScreenMode(val label: String) { STATIC("Estático"), MASCOTS("Mascotes"), CAROUSEL("Carrossel"), CLOCK("Relógio") }
-enum class Backdrop(val label: String) { STICK("Tom do stick"), BLACK("Preto AMOLED") }
+enum class Backdrop(val label: String) { DEFAULT("Tema padrão"), BLACK("Preto AMOLED") }
 enum class Brightness(val label: String, val level: Float) { SYSTEM("Sistema", -1f), LOW("Baixo", 0.05f), MEDIUM("Médio", 0.35f), HIGH("Alto", 1f) }
 enum class Orientation(val label: String) { LANDSCAPE("Paisagem"), PORTRAIT("Retrato"), AUTO("Automática") }
 enum class Skin(val label: String) { CLASSIC("Clássico"), MODELS("Por modelo"), CROWNS("Coroas"), XMAS("Natal") }
@@ -25,7 +25,7 @@ data class Prefs(
     val pixelShift: Boolean = true,
     val autostart: Boolean = true,
     val panelEnabled: Boolean = true,
-    val backdrop: Backdrop = Backdrop.STICK,
+    val backdrop: Backdrop = Backdrop.DEFAULT,
     val zoom: Int = 100,
     val skin: Skin = Skin.MODELS,
     val tint: Tint = Tint.CORAL,

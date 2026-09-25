@@ -37,7 +37,7 @@ object C {
 
     fun apply(b: Backdrop) {
         when (b) {
-            Backdrop.STICK -> {
+            Backdrop.DEFAULT -> {
                 bg = Color(0xFF16130F); card = Color(0xFF1F1A14); card2 = Color(0xFF262019)
                 line = Color(0xFF383024); track = Color(0xFF2B2419)
                 text = Color(0xFFECE3D6); muted = Color(0xFFA89A86); dim = Color(0xFF7D715F)
